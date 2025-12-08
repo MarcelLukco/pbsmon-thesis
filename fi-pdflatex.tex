@@ -116,7 +116,7 @@ This thesis deals with the design and implementation of a new version of the PBS
 
 \chapter{Analysis of the Existing Solution – PBS MON}
 \label{chap:analysis}
-The Pbsmon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System) \cite{pbs2022}, the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, jobs, and user activities within the entire MetaCentrum infrastructure.
+The Pbsmon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System), the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, jobs, and user activities within the entire MetaCentrum infrastructure.
 
 The web interface is used to visualize data from the PBS, Perun, and OpenStack systems. The information displayed includes a personal view of jobs, available computing resources, an overview of computing machines and their utilization, a list of users, and other statistics. Among other things, the following data is collected:
 
@@ -203,8 +203,8 @@ The PBS server is the authority for the entire cluster: it receives and register
   
   \item \textbf{Security and access} -- manages access policies through ACLs (hosts, users, managers/operators), supports Kerberos/realm policies, and handles credential management/renewal.
   
-  \item \textbf{Operations and management} -- configures logging, email notifications, license quotas/counters, and system version; allows management of hooks and other server-level objects.
-\end{itemize}\cite{pbs2022}
+  \item \textbf{Operations and management} -- configures logging, email notifications, license quotas/counters, and system version; allows management of hooks and other server-level objects.\cite{pbs2022}
+\end{itemize}
 
 \subsubsection{Jobs}
 \label{subsubsec:jobs}
@@ -224,8 +224,8 @@ A job can be a standalone task or a member of a job array (with multiple subjobs
   
   \item \textbf{I/O and environment} -- working directory (jobdir), stdout/stderr paths (Output\_Path, Error\_Path), submission arguments (Submit\_arguments), and environment variables (Variable\_List).
   
-  \item \textbf{Result and diagnostics} -- return code (Exit\_status) and auxiliary fields for auditing and progress tracking.
-\end{itemize}\cite{pbs2022}
+  \item \textbf{Result and diagnostics} -- return code (Exit\_status) and auxiliary fields for auditing and progress tracking.\cite{pbs2022}
+\end{itemize}
 
 \subsubsection{Queues}
 \label{subsubsec:queues}
@@ -256,9 +256,9 @@ A queue is a logical structure for accepting and processing jobs---it defines it
    or acl\_host\_enable/acl\_hosts.
   
   \item \textbf{Organizational tags} -- optional attributes such as fairshare\_tree (fairshare hierarchy) or partition (infrastructure label/partition) for logical segmentation and policy purposes.
+  \cite{pbs2022}
 \end{itemize}
 
-\parencite{pbs2022}
 \subsubsection{Nodes}
 \label{subsubsec:nodes}
 
@@ -382,8 +382,8 @@ PBS provides status information about each scheduler instance, including: \cite{
   
   \item \textbf{File system paths} -- sched\_priv (path to scheduler private directory) and sched\_log (path to scheduler log files).
   
-  \item \textbf{Logging and monitoring} -- log\_events (bitmask specifying which events to log) and server\_dyn\_res\_alarm (alarm threshold for dynamic resource changes).
-\end{itemize} \cite{pbs2022}
+  \item \textbf{Logging and monitoring} -- log\_events (bitmask specifying which events to log) and server\_dyn\_res\_alarm (alarm threshold for dynamic resource changes). \cite{pbs2022}
+\end{itemize}
 
 \subsubsection{Fairshare metrics}
 \label{subsubsec:fairshare-metrics}
@@ -479,14 +479,11 @@ This shell command returns a CSV file with columns:
 
 user, last\_modified, fairshare.
 
-\subsubsection{Acl list collection}
-\label{subsubsec:acl-list-collection}
+\subsubsection{Group file collection}
+\label{subsubsec:group-file-collection}
 
-In addition to entities and caches, the shell script located on PBS server automatically pushes its /etc/group file every time it has changed and writes it to the filesystem of the Pbsmon server.
-It is located in the following path:
+In addition to entities and caches, the shell script located on PBS server automatically pushes its /etc/group file. These files provide information about local UNIX groups and their members. Whenever time it has changed, the PBS server writes the updated version to the Pbsmon server's filesystem under the following path: \textbf{/etc/pbsmon/group/<pbsServer>}.
 
-\textbf{/etc/pbsmon/acl/<pbsServer>} -
-for each PBS server, there is a separate file with the list of ACLs and their members.
 
 \newpage
 \section{Data Collection from Perun}
@@ -494,8 +491,7 @@ Perun is an open-source system developed in Java that serves for comprehensive m
 
 \subsection{Entities in Perun}
 \label{subsec:entities-in-perun}
-Entities retrieved from Perun are two independent data domains — users and machines. Each domain is exported by Perun as a separate JSON file.
-In addition to that, perun collects and aftewards send etc/group file from each PBS server. The detailed description of these entities:
+Entities retrieved from Perun are two independent data domains — users and machines. Each domain is exported by Perun as a separate JSON file. The detailed description of these entities:
 
 \subsubsection{Users}
 \label{subsubsec:users-perun}
@@ -520,10 +516,6 @@ Each computing node is described by the following metadata:
 
 These data are neccessary to get additional information about the complete information about the computing node for the running PBS jobs.
 Additionally, these data independetly from PBS are important for knowing the complete information about the computing nodes for whole MetaCentrum infrastructure.
-
-\subsubsection{etc/group Files}
-\label{subsubsec:groups-perun}
-In addition to user and machine metadata, Perun is also responsible for collecting \textbf{/etc/group} files from individual PBS servers. These files are included in the export and provide information about local UNIX groups and permissions. These files are then propagated to Pbsmon.
 
 
 \subsection{Data Collection Mechanism}
