@@ -109,8 +109,7 @@ Currently, high-performance computing plays a key role in the implementation of 
 
 The PBSmon web service was developed to monitor these resources and provide an overview of their status. This application ensures the regular collection of metadata from computing nodes, queues, servers, and running jobs using native calls to PBS servers. It then transforms this data into a visual form accessible to users. Thanks to PBSmon, users can monitor the current system load, the status of individual jobs, and the availability of computing resources in real time.
 
-However, the original architecture of PBSmon is based on a combination of Java version 8 and C libraries, which represents a technological debt in today's context. Growing demands for security, sustainability, and support for containerized deployment require a fundamental refactoring of the system.
-
+However, the original PBSmon application is monolithic and uses outdated technologies, such as Java library Stripes, which is no longer maintained. Growing demands for security, sustainability, and support for containerized deployment require a fundamental refactoring of the system.
 
 This thesis deals with the design and implementation of a new version of the PBSmon system, built on modern technologies: backend within the NestJS framework and frontend within the React framework. The goal is to create a modular, maintainable, and cloud-native architecture that preserves the functionality of the original solution while being ready for further development and adaptation to current technological standards.
 
@@ -480,6 +479,15 @@ This shell command returns a CSV file with columns:
 
 user, last\_modified, fairshare.
 
+\subsubsection{Acl list collection}
+\label{subsubsec:acl-list-collection}
+
+In addition to entities and caches, the shell script located on PBS server automatically pushes its /etc/group file every time it has changed and writes it to the filesystem of the Pbsmon server.
+It is located in the following path:
+
+\textbf{/etc/pbsmon/acl/<pbsServer>} -
+for each PBS server, there is a separate file with the list of ACLs and their members.
+
 \newpage
 \section{Data Collection from Perun}
 Perun is an open-source system developed in Java that serves for comprehensive management of identities, groups, attributes, and access to various resources and services. It is a modular solution designed for efficient management of users, organizations, and projects. The system is built with an emphasis on operation in distributed environments and on integration with existing identity systems in the fields of research and education.\cite{perun2025}
@@ -526,8 +534,6 @@ The integration of the Pbsmon system with Perun is designed using a PUSH model. 
 \begin{itemize}
   \item \textbf{/etc/pbsmon/pbsmon\_users.json} 
   \item \textbf{/etc/pbsmon/pbsmon\_machines.json}
-  \item \textbf{/etc/pbsmon/pbsmon\_etc\_group\_<pbsServer>} -- 
-  for each PBS server, there is a separate file
 \end{itemize}
 
 \subsubsection{Change Detection and Synchronization}
@@ -559,11 +565,15 @@ An example of the response structure for the OpenStack cluster named "glados" is
 
 As mentioned in section \ref{note:historical-data}, the data collected by PBSmon represents only the current state of the PBS infrastructure. To access historical information about completed jobs, their resource usage, and long-term statistics, a separate application is responsible for collecting and storing historical PBS data in a PostgreSQL database.
 
-This historical data collection system continuously records information about finished jobs, including their execution times, resource consumption, and user associations. The database schema is designed to support efficient querying of user statistics and usage patterns over time.
+This historical data collection system continuously records information about finished jobs, including their execution times, resource consumption, and user associations.
 
 \section{Authentication}
 \label{sec:authentication}
-TBD - describe the authentication mechanism, using OIDC token, that is provided by the third party system.
+The current Pbsmon solution uses third-party authentication provided by Perun's e-INFRA system. Authentication is implemented using the OpenID Connect (OIDC) protocol, which allows users to authenticate through the centralized identity provider managed by Perun.  \cite{perun2025}
+
+This approach ensures that only authorized users with valid credentials from the Perun identity management system can access the Pbsmon web interface.  \cite{perun2025}
+
+The authentication flow follows the standard OIDC protocol, where users are redirected to the Proxy IdP for login, and upon successful authentication, an OIDC token is issued and used to grant access to the Pbsmon application. \cite{perun2025}
 
 \section{Web Layer and User Interface}
 \label{sec:web-layer-and-user-interface}
