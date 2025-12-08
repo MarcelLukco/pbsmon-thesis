@@ -109,7 +109,7 @@ Currently, high-performance computing plays a key role in the implementation of 
 
 The PBSmon web service was developed to monitor these resources and provide an overview of their status. This application ensures the regular collection of metadata from computing nodes, queues, servers, and running jobs using native calls to PBS servers. It then transforms this data into a visual form accessible to users. Thanks to PBSmon, users can monitor the current system load, the status of individual jobs, and the availability of computing resources in real time.
 
-However, the original PBSmon application is monolithic and uses outdated technologies, such as Java library Stripes, which is no longer maintained. Growing demands for security, sustainability, and support for containerized deployment require a fundamental refactoring of the system.
+However, the original PBSmon application is monolithic and uses outdated libraries, such as Java library Stripes, which is no longer maintained. Growing demands for security, sustainability, and support for containerized deployment require a fundamental refactoring of the system.
 
 This thesis deals with the design and implementation of a new version of the PBSmon system, built on modern technologies: backend within the NestJS framework and frontend within the React framework. The goal is to create a modular, maintainable, and cloud-native architecture that preserves the functionality of the original solution while being ready for further development and adaptation to current technological standards.
 
@@ -577,8 +577,23 @@ The authentication flow follows the standard OIDC protocol, where users are redi
 
 \section{Web Layer and User Interface}
 \label{sec:web-layer-and-user-interface}
-TBD - This is available only to the logged in users.
-Layout description, showing some Figure, Describing the views:
+The current Pbsmon application is integrated as part of the MetaVO portal (\url{https://metavo.metacentrum.cz}), which serves as the main web interface for MetaCentrum services. Within MetaVO, Pbsmon is encapsulated as a single subsection called "Current state" (see \ref{fig:pbsmon}). This section is available only to logged-in users who have been granted access to Pbsmon through the authentication system described in section \ref{sec:authentication}.
+
+The "Current state" subsection consists of the following pages:
+
+\begin{itemize}
+  \item \textbf{Personal view} - A dashboard with information about the logged-in person, including their job statistics, jobs queues and quick access to other relevant pages
+  \item \textbf{QSUB assembler} - A tool for assembling commands for job submission, described in detail in subsection \ref{subsec:qsub-assembler}
+  \item \textbf{Physical machines} - A list of Metacentrum grid infrastructure retrieven from Perun nodes with PBS mapping
+  \item \textbf{PBS node state} - A list of all PBS nodes and their current status. Without mapping to the Perun physical machines.
+  \item \textbf{Virtual machines} - A list of all virtual machines (no longer relevant in the current infrastructure)
+  \item \textbf{Jobs queues} - A list of queues and reservations
+  \item \textbf{Jobs} - A page with total statistics and navigation hub to "My jobs", "All jobs", and "Suspicious jobs"
+  \item \textbf{User} - A list of users from Perun and their current CPU usage
+  \item \textbf{Machine properties} - A list of all PBS nodes and their properties (e.g., architecture, OS family, cluster, cgroups, etc.). Page allows to click on the property to see all the nodes that have this property.
+  \item \textbf{List of hardware} - A list of organizations and their clusters
+  \item \textbf{Cloud} - Cloud-related information (no longer relevant)
+\end{itemize}
 
 \begin{figure}[h]
   \centering
@@ -601,21 +616,58 @@ The Personal view serves as the main dashboard for users, representing one of th
 
 The dashboard displays total counts of jobs associated with the user. However, since PBS always returns the current state of the system, the Personal view focuses on showing counts of \textit{relevant} jobs---those that are considered active. Specifically, this includes jobs that are currently in the queue, currently running, or have finished within the previous few days. This filtering ensures that users see meaningful information about their recent and ongoing computational work, rather than being overwhelmed by historical data from all past jobs.
 
-The Personal view also contains links to other pages within the system. One such link leads to the "My jobs" page, which displays detailed information about the user's jobs. This functionality is highly relevant and could be directly incorporated into the new dashboard within the new solution, as it provides essential job management capabilities. Another link directs users to the "Queue" page, which shows information about job queues across the system. While this information is useful, it is considered less relevant for individual users and therefore does not need to be included in the new dashboard.
+The Personal view also contains links to other pages within the system. One such link leads to the "My jobs" page, which displays detailed information about the user's jobs. For user the list of his jobs are highly relevant, therefore it can be directly incorporated into the new dashboard within the new solution.
 
-One limitation of the current implementation is that the dashboard only displays CPU usage and does not include GPU resources. This limitation stems from the fact that GPU usage was not a significant concern at the start of the old Pbsmon development, but has since become increasingly important as GPU computing has gained prominence in the MetaCentrum infrastructure.
+The page also displays all jobs queues that are accessible by the user. While this information is useful, it is considered less relevant and it is not necessary to be included in the new dashboard.
+
+One limitation of the current implementation is that the dashboard only displays total CPU usage and does not include total GPU resources. This limitation stems from the fact that GPU usage was not a significant concern at the start of the old Pbsmon development, but has since become increasingly important as GPU computing has gained prominence in the MetaCentrum infrastructure.
 
 
 \subsection{QSUB assembler}
 \label{subsec:qsub-assembler}
-TBD - important - 
+The QSUB assembler is one of the most important features of the Pbsmon web interface, designed to assist users in submitting jobs to the MetaCentrum infrastructure. The \texttt{qsub} command is a CLI (Command Line Interface) command that allows users to submit jobs to the PBS system. This page provides a form-based interface for configuring job submission parameters.
 
-\subsection{Rest pages}
-\label{subsec:rest-pages}
-TBD - other pages
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/old-pbsmon-qsub-assembler.png}
+  \caption{QSUB assembler interface}
+  \label{fig:qsub-assembler}
+\end{figure}
+
+The QSUB assembler page presents users with an extensive form containing numerous parameters that can be set for job submission, such as resource requirements (CPU flags, memory, scratch space, architecture), queue selection, walltime, and other MetaCentrum-specific options. 
+
+The current user interface presents parameters in a form equivalent to their syntax in the \texttt{qsub} command, which has the advantage that users gradually learn the \texttt{qsub} command syntax. However, the interface lacks supplementary explanations for individual fields, and therefore it is not always clear what the purpose of some less known or specific parameters is (e.g., \texttt{luna}, \texttt{umg}). The UI contains names directly according to PBS attributes, but without context or brief help, it can be difficult for users to understand what exactly these choices represent or how they will affect job execution.
+
+After configuring the desired parameters, the page automatically generates a complete shell command that can be used in two ways:
+
+\begin{itemize}
+  \item Directly inserted into a terminal and executed to submit the job immediately
+  \item Inserted as a comment directive in a PBS job script (e.g., \texttt{\#PBS -l ...}) for later execution
+\end{itemize}
+
+Upon confirmation (submit), the page performs a query against the available MetaCentrum infrastructure to determine job feasibility. The results are presented in two key overviews:
+
+\begin{itemize}
+  \item \textbf{Number of nodes meeting the requirements}: This shows the total count of nodes that are compatible with the specified parameters (e.g., nodes matching the CPU flags, memory requirements, scratch space, architecture, and other constraints)
+  \item \textbf{Number of available nodes}: This displays the count of free nodes from the compatible set at the current moment, representing the real-time availability for job execution
+\end{itemize}
+
+Following these summary statistics, the page displays a detailed list of all nodes that match the specified requirements, providing users with list of nodes that can be used to submit the job.
 
 \section{Summary of the Analysis}
-TBD - Strength and weaknesses
+\label{sec:summary-of-analysis}
+
+The analysis of the existing Pbsmon solution reveals a system that has successfully served its purpose of monitoring and visualizing MetaCentrum infrastructure data. The application effectively integrates data from multiple sources (PBS, Perun, and OpenStack) and provides users with  views of computational resources, jobs, and system status. Key strengths include the QSUB assembler feature, which assists users in constructing job submission commands, and the successful integration with Perun's authentication system.
+
+However, the analysis also identifies several significant limitations and areas for improvement. The system suffers from a \textbf{monolithic architecture} that tightly couples all components, making it difficult to maintain, extend, or deploy in modern containerized environments. The absence of dockerization further complicates deployment and scaling. The application relies on \textbf{outdated libraries}, most notably the Java library Stripes, which is no longer maintained, creating security and sustainability concerns.
+
+From a user experience perspective, the interface presents parameters in a form that mirrors the \texttt{qsub} command syntax, which helps users learn PBS commands but lacks supplementary explanations for individual fields. This makes it difficult for users to understand the purpose of less common parameters (e.g., \texttt{luna}, \texttt{umg}) or how their choices will affect job execution. The web interface uses \textbf{server-side rendering} and is not implemented as a standalone frontend application, limiting flexibility and modern user experience capabilities.
+
+The system also exhibits limitations in meeting current infrastructure demands. As GPU computing has gained prominence in MetaCentrum, the dashboard only displays total CPU usage statistics and does not include GPU resources or GPU time usage metrics. This reflects a common occurence with long-serving projects.
+
+Another concern identified is a \textbf{potential GDPR violation}: the system displays information about all users that currently have active jobs and their jobs within MetaCentrum, which may not comply with data protection regulations regarding the visibility of personal computational activity to other users.
+
+In summary, while Pbsmon has been functional and valuable, its monolithic architecture, outdated technology stack, lack of containerization support, suboptimal user experience, incomplete feature coverage for modern computing needs, and potential privacy compliance issues necessitate a fundamental redesign and modernization of the system.
 
 
 \chapter{Design of the New Solution}
