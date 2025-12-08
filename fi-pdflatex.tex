@@ -424,6 +424,8 @@ Subsequently, current Pbsmon implementation contains C code that, when invoked, 
 
 This collection process is triggered whenever the user wants to display any Pbsmon page and when the data in the memory cache is older than 60 seconds.
 
+Another important note is that collected data represents the current state of the PBS server. It does not include any historical data. \label{note:historical-data}
+
 \newpage
 \begin{lstlisting}[caption={Partial code snippet for data collection from PBS server},
   language=c, label={lst:pbs_connect_example}]
@@ -554,8 +556,10 @@ An example of the response structure for the OpenStack cluster named "glados" is
 \newpage
 \section{Retrieval of historical data}
 \label{sec:collection-of-historical-data}
-TBD - all the collected data represents the current state of the infrastructure.
-Whenever we need to retrieve the historical data about finished jobs, we need to retrieve the data from accounting database. blah blah blag, describe the schema, 
+
+As mentioned in section \ref{note:historical-data}, the data collected by PBSmon represents only the current state of the PBS infrastructure. To access historical information about completed jobs, their resource usage, and long-term statistics, a separate application is responsible for collecting and storing historical PBS data in a PostgreSQL database.
+
+This historical data collection system continuously records information about finished jobs, including their execution times, resource consumption, and user associations. The database schema is designed to support efficient querying of user statistics and usage patterns over time.
 
 \section{Authentication}
 \label{sec:authentication}
