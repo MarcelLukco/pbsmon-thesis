@@ -114,9 +114,9 @@ However, the original PBSmon application is monolithic and uses outdated librari
 This thesis deals with the design and implementation of a new version of the PBSmon system, built on modern technologies: backend within the NestJS framework and frontend within the React framework. The goal is to create a modular, maintainable, and cloud-native architecture that preserves the functionality of the original solution while being ready for further development and adaptation to current technological standards.
 
 
-\chapter{Analysis of the Existing Solution – PBS MON}
+\chapter{Analysis of the Existing Solution – PBSmon}
 \label{chap:analysis}
-The Pbsmon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System), the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, jobs, and user activities within the entire MetaCentrum infrastructure.
+The PBSmon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System), the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, jobs, and user activities within the entire MetaCentrum infrastructure.
 
 The web interface is used to visualize data from the PBS, Perun, and OpenStack systems. The information displayed includes a personal view of jobs, available computing resources, an overview of computing machines and their utilization, a list of users, and other statistics. Among other things, the following data is collected:
 
@@ -138,7 +138,7 @@ The existing solution is built as a monolithic Java application that collects da
 \newpage
 \subsection{Data collection environments}
 \label{subsec:data-collection-environments}
-Pbsmon collects following data from the following environments:
+PBSmon collects following data from the following environments:
 \begin{itemize}
   \item PBS environment
   \begin{itemize}
@@ -165,12 +165,12 @@ The data obtained from various sources — such as compute clusters (PBS), cloud
 \subsection{Web Presentation}
 \label{subsec:web-presentation}
 
-The presentation of data is performed through server-side rendering of HTML pages. Only logged in users, that have approved access to Pbsmon can access the web interface. The authorization is performed by third party system using OICD token, that will be described in detail in section \ref{sec:authentication}.
+The presentation of data is performed through server-side rendering of HTML pages. Only logged in users, that have approved access to PBSmon can access the web interface. The authorization is performed by third party system using OICD token, that will be described in detail in section \ref{sec:authentication}.
 
 These pages display detailed views of jobs, nodes, system states, and other information relevant to both users and administrators. As mentioned earlier, the web interface is strictly read-only and does not provide any functionality for data input or modification.
 The frontend is not implemented as a standalone application; it is an integral part of the monolithic Java system.
 
-One of the key features is so called \textbf{QSUB assembler}, which allows user to add required parameters for the job submission and pbsmon will notify the user about the nodes that fullfils the requirements. Among other, it produces a shell script that can be executed to submit the job to the PBS server with the required parameters
+One of the key features is so called \textbf{QSUB assembler}, which allows user to add required parameters for the job submission and PBSmon will notify the user about the nodes that fullfils the requirements. Among other, it produces a shell script that can be executed to submit the job to the PBS server with the required parameters
 
 All of this will be described in more detail in section \ref{sec:web-layer-and-user-interface}.
 
@@ -419,9 +419,9 @@ This library allows external applications and tools to communicate with the PBS 
 Thus, library represents a key component for implementing a tool that enables data collection and monitoring of jobs managed by the PBS server.
 
 
-Subsequently, current Pbsmon implementation contains C code that, when invoked, retrieves information from the PBS server using the library functions and then stores this data into a file, which the Java application later processes and saves into the in-memory store (see Listing \ref{lst:pbs_connect_example}).
+Subsequently, current PBSmon implementation contains C code that, when invoked, retrieves information from the PBS server using the library functions and then stores this data into a file, which the Java application later processes and saves into the in-memory store (see Listing \ref{lst:pbs_connect_example}).
 
-This collection process is triggered whenever the user wants to display any Pbsmon page and when the data in the memory cache is older than 60 seconds.
+This collection process is triggered whenever the user wants to display any PBSmon page and when the data in the memory cache is older than 60 seconds.
 
 Another important note is that collected data represents the current state of the PBS server. It does not include any historical data. \label{note:historical-data}
 
@@ -482,7 +482,7 @@ user, last\_modified, fairshare.
 \subsubsection{Group file collection}
 \label{subsubsec:group-file-collection}
 
-In addition to entities and caches, the shell script located on PBS server automatically pushes its /etc/group file. These files provide information about local UNIX groups and their members. Whenever time it has changed, the PBS server writes the updated version to the Pbsmon server's filesystem under the following path: \textbf{/etc/pbsmon/group/<pbsServer>}.
+In addition to entities and caches, the shell script located on PBS server automatically pushes its /etc/group file. These files provide information about local UNIX groups and their members. Whenever time it has changed, the PBS server writes the updated version to the PBSmon server's filesystem under the following path: \textbf{/etc/pbsmon/group/<pbsServer>}.
 
 
 \newpage
@@ -500,7 +500,7 @@ The user dataset contains information about all registered users in the MetaCent
 \subsubsection{Machines}
 \label{subsubsec:machines-perun}
 In addition to management of users, Perun also collect information about physical computing resources of the MetaCentrum infrastructure.
-These data are then passed to Pbsmon from Perun. Data are hierachically structured and grouped by Organization -> Cluster -> Computing Node.
+These data are then passed to PBSmon from Perun. Data are hierachically structured and grouped by Organization -> Cluster -> Computing Node.
 
 Each record is an institution that has at least one cluster. Cluster is a group of computing nodes that are owned by the same institution. Computing node is a physical machine that is part of the cluster.
 
@@ -521,7 +521,7 @@ Additionally, these data independetly from PBS are important for knowing the com
 \subsection{Data Collection Mechanism}
 \label{subsec:data-collection-mechanism-perun}
 
-The integration of the Pbsmon system with Perun is designed using a PUSH model. Instead of direct access to the Perun database or invoking its API, Perun periodically generates JSON files containing all relevant information about users and computing resources. These files are then transferred via SSH directly to the Pbsmon server, where they are stored in the filesystem, and subsequently loaded and processed by Pbsmon. These files are stored in the filesystem as following:
+The integration of the PBSmon system with Perun is designed using a PUSH model. Instead of direct access to the Perun database or invoking its API, Perun periodically generates JSON files containing all relevant information about users and computing resources. These files are then transferred via SSH directly to the PBSmon server, where they are stored in the filesystem, and subsequently loaded and processed by PBSmon. These files are stored in the filesystem as following:
 
 \begin{itemize}
   \item \textbf{/etc/pbsmon/pbsmon\_users.json} 
@@ -529,7 +529,7 @@ The integration of the Pbsmon system with Perun is designed using a PUSH model. 
 \end{itemize}
 
 \subsubsection{Change Detection and Synchronization}
-Currently, whenever user opens any page in Pbsmon, the system checks if the files were modified since last load. If they were, the files are loaded and processed by Pbsmon.
+Currently, whenever user opens any page in PBSmon, the system checks if the files were modified since last load. If they were, the files are loaded and processed by PBSmon.
 
 
 \newpage 
@@ -540,13 +540,13 @@ Beyond standard infrastructure-as-a-service functionality, additional components
 
 Within Metacentrum infrastructure, OpenStack is used to provide virtual machines to the users with specific needs that are not covered by the PBS environment. There are some computing nodes that are part of MetaCentrum infrastructure, but are reserved ad hoc for OpenStack. Within nodes returned by Perun mentioned in \ref{subsubsec:machines-perun} are also nodes that are used for OpenStack.
 
-Current Pbsmon implementation gets very limited information about OpenStack virtual machines for each cluster. For each cluster, there is a list of virtual machines with their reserved CPU, name and user ID.
+Current PBSmon implementation gets very limited information about OpenStack virtual machines for each cluster. For each cluster, there is a list of virtual machines with their reserved CPU, name and user ID.
 
  
 \subsection{Data Collection Mechanism}
 \label{subsec:data-collection-mechanism-openstack}
 
-The integration of the Pbsmon system with OpenStack is designed using a PUSH model. Instead of direct access to the API, JSON files are transferred via SSH directly to the Pbsmon server, where they are stored in the filesystem, and subsequently loaded and processed by Pbsmon. For each cluster, there is a separate file with the list of virtual machines with their reserved CPU, name and user ID. 
+The integration of the PBSmon system with OpenStack is designed using a PUSH model. Instead of direct access to the API, JSON files are transferred via SSH directly to the PBSmon server, where they are stored in the filesystem, and subsequently loaded and processed by PBSmon. For each cluster, there is a separate file with the list of virtual machines with their reserved CPU, name and user ID. 
 
 An example of the response structure for the OpenStack cluster named "glados" is provided in Appendix \ref{app:openstack-response-example}.
 
@@ -561,15 +561,15 @@ This historical data collection system continuously records information about fi
 
 \section{Authentication}
 \label{sec:authentication}
-The current Pbsmon solution uses third-party authentication provided by Perun's e-INFRA system. Authentication is implemented using the OpenID Connect (OIDC) protocol, which allows users to authenticate through the centralized identity provider managed by Perun.  \cite{perun2025}
+The current PBSmon solution uses third-party authentication provided by Perun's e-INFRA system. Authentication is implemented using the OpenID Connect (OIDC) protocol, which allows users to authenticate through the centralized identity provider managed by Perun.  \cite{perun2025}
 
-This approach ensures that only authorized users with valid credentials from the Perun identity management system can access the Pbsmon web interface.  \cite{perun2025}
+This approach ensures that only authorized users with valid credentials from the Perun identity management system can access the PBSmon web interface.  \cite{perun2025}
 
-The authentication flow follows the standard OIDC protocol, where users are redirected to the Proxy IdP for login, and upon successful authentication, an OIDC token is issued and used to grant access to the Pbsmon application. \cite{perun2025}
+The authentication flow follows the standard OIDC protocol, where users are redirected to the Proxy IdP for login, and upon successful authentication, an OIDC token is issued and used to grant access to the PBSmon application. \cite{perun2025}
 
 \section{Web Layer and User Interface}
 \label{sec:web-layer-and-user-interface}
-The current Pbsmon application is integrated as part of the MetaVO portal (\url{https://metavo.metacentrum.cz}), which serves as the main web interface for MetaCentrum services. Within MetaVO, Pbsmon is encapsulated as a single subsection called "Current state" (see \ref{fig:pbsmon}). This section is available only to logged-in users who have been granted access to Pbsmon through the authentication system described in section \ref{sec:authentication}.
+The current PBSmon application is integrated as part of the MetaVO portal (\url{https://metavo.metacentrum.cz}), which serves as the main web interface for MetaCentrum services. Within MetaVO, PBSmon is encapsulated as a single subsection called "Current state" (see \ref{fig:pbsmon}). This section is available only to logged-in users who have been granted access to PBSmon through the authentication system described in section \ref{sec:authentication}.
 
 The "Current state" subsection consists of the following pages:
 
@@ -590,19 +590,19 @@ The "Current state" subsection consists of the following pages:
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.5\textwidth]{figures/pbsmon.png}
-  \caption{Pbsmon layout}
+  \caption{PBSmon layout}
   \label{fig:pbsmon}
 \end{figure}
 
 \newpage
 \subsection{Personal view}
 \label{subsec:personal-view}
-The Personal view serves as the main dashboard for users, representing one of the most important and frequently used features of Pbsmon. This view provides users with an overview of their job statistics and quick access to other relevant pages.
+The Personal view serves as the main dashboard for users, representing one of the most important and frequently used features of PBSmon. This view provides users with an overview of their job statistics and quick access to other relevant pages.
 
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.5\textwidth]{figures/old-pbsmon-personal-view.png}
-  \caption{Personal view dashboard in the old Pbsmon}
+  \caption{Personal view dashboard in the old PBSmon}
   \label{fig:old-pbsmon-personal-view}
 \end{figure}
 
@@ -612,12 +612,12 @@ The Personal view also contains links to other pages within the system. One such
 
 The page also displays all jobs queues that are accessible by the user. While this information is useful, it is considered less relevant and it is not necessary to be included in the new dashboard.
 
-One limitation of the current implementation is that the dashboard only displays total CPU usage and does not include total GPU resources. This limitation stems from the fact that GPU usage was not a significant concern at the start of the old Pbsmon development, but has since become increasingly important as GPU computing has gained prominence in the MetaCentrum infrastructure.
+One limitation of the current implementation is that the dashboard only displays total CPU usage and does not include total GPU resources. This limitation stems from the fact that GPU usage was not a significant concern at the start of the old PBSmon development, but has since become increasingly important as GPU computing has gained prominence in the MetaCentrum infrastructure.
 
 
 \subsection{QSUB assembler}
 \label{subsec:qsub-assembler}
-The QSUB assembler is one of the most important features of the Pbsmon web interface, designed to assist users in submitting jobs to the MetaCentrum infrastructure. The \texttt{qsub} command is a CLI (Command Line Interface) command that allows users to submit jobs to the PBS system. This page provides a form-based interface for configuring job submission parameters.
+The QSUB assembler is one of the most important features of the PBSmon web interface, designed to assist users in submitting jobs to the MetaCentrum infrastructure. The \texttt{qsub} command is a CLI (Command Line Interface) command that allows users to submit jobs to the PBS system. This page provides a form-based interface for configuring job submission parameters.
 
 \begin{figure}[h]
   \centering
@@ -649,7 +649,7 @@ Following these summary statistics, the page displays a detailed list of all nod
 \section{Summary of the Analysis}
 \label{sec:summary-of-analysis}
 
-The analysis of the existing Pbsmon solution reveals a system that has successfully served its purpose of monitoring and visualizing MetaCentrum infrastructure data. The application effectively integrates data from multiple sources (PBS, Perun, and OpenStack) and provides users with  views of computational resources, jobs, and system status. Key strengths include the QSUB assembler feature, which assists users in constructing job submission commands, and the successful integration with Perun's authentication system.
+The analysis of the existing PBSmon solution reveals a system that has successfully served its purpose of monitoring and visualizing MetaCentrum infrastructure data. The application effectively integrates data from multiple sources (PBS, Perun, and OpenStack) and provides users with  views of computational resources, jobs, and system status. Key strengths include the QSUB assembler feature, which assists users in constructing job submission commands, and the successful integration with Perun's authentication system.
 
 However, the analysis also identifies several significant limitations and areas for improvement. The system suffers from a \textbf{monolithic architecture} that tightly couples all components, making it difficult to maintain, extend, or deploy in modern containerized environments. The absence of dockerization further complicates deployment and scaling. The application relies on \textbf{outdated libraries}, most notably the Java library Stripes, which is no longer maintained, creating security and sustainability concerns.
 
@@ -659,7 +659,7 @@ The system also exhibits limitations in meeting current infrastructure demands. 
 
 Another concern identified is a \textbf{potential GDPR violation}: the system displays information about all users that currently have active jobs and their jobs within MetaCentrum, which may not comply with data protection regulations regarding the visibility of personal computational activity to other users.
 
-In summary, while Pbsmon has been functional and valuable, its monolithic architecture, outdated technology stack, lack of containerization support, suboptimal user experience, incomplete feature coverage for modern computing needs, and potential privacy compliance issues necessitate a fundamental redesign and modernization of the system.
+In summary, while PBSmon has been functional and valuable, its monolithic architecture, outdated technology stack, lack of containerization support, suboptimal user experience, incomplete feature coverage for modern computing needs, and potential privacy compliance issues necessitate a fundamental redesign and modernization of the system.
 
 
 \chapter{Design of the New Solution}
