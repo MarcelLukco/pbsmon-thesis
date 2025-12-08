@@ -107,7 +107,7 @@
 \addcontentsline{toc}{chapter}{Introduction}
 Currently, high-performance computing plays a key role in the implementation of research projects across a wide range of scientific disciplines. In the academic sector, it is therefore essential to ensure access to sufficient computing power to enable the implementation of demanding simulations, the processing of large data sets, and the effective analysis of results. National computing infrastructures, including CESNET, have been created for this purpose. This academic institution offers computing resources dedicated exclusively to research and academic purposes.
 
-The PBSmon web service was developed to monitor these resources and provide an overview of their status. This application ensures the regular collection of metadata from computing nodes, queues, servers, and running tasks using native calls to PBS servers. It then transforms this data into a visual form accessible to users. Thanks to PBSmon, users can monitor the current system load, the status of individual tasks, and the availability of computing resources in real time.
+The PBSmon web service was developed to monitor these resources and provide an overview of their status. This application ensures the regular collection of metadata from computing nodes, queues, servers, and running jobs using native calls to PBS servers. It then transforms this data into a visual form accessible to users. Thanks to PBSmon, users can monitor the current system load, the status of individual jobs, and the availability of computing resources in real time.
 
 However, the original architecture of PBSmon is based on a combination of Java version 8 and C libraries, which represents a technological debt in today's context. Growing demands for security, sustainability, and support for containerized deployment require a fundamental refactoring of the system.
 
@@ -117,23 +117,23 @@ This thesis deals with the design and implementation of a new version of the PBS
 
 \chapter{Analysis of the Existing Solution – PBS MON}
 \label{chap:analysis}
-The Pbsmon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System), the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, tasks, and user activities within the entire MetaCentrum infrastructure.
+The Pbsmon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System) \cite{pbs2022}, the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, jobs, and user activities within the entire MetaCentrum infrastructure.
 
-The web interface is used to visualize data from the PBS, Perun, and OpenStack systems. The information displayed includes a personal view of tasks, available computing resources, an overview of computing machines and their utilization, a list of users, and other statistics. Among other things, the following data is collected:
+The web interface is used to visualize data from the PBS, Perun, and OpenStack systems. The information displayed includes a personal view of jobs, available computing resources, an overview of computing machines and their utilization, a list of users, and other statistics. Among other things, the following data is collected:
 
 \begin{itemize}
   \item PBS nodes (status, load, available resources),
   \item information about virtual machines
   \item physical machines (availability, utilization, technical parameters),
-  \item users (identity, activity, tasks),
+  \item users (identity, activity, jobs),
   \item queues (status, priority, configuration),
-  \item tasks (status, start time, resources used, user).
+  \item jobs (status, start time, resources used, user).
 \end{itemize}
 
 
 \section{System Architecture}
 \label{sec:system-architecture}
-The existing solution is built as a monolithic Java application that collects data from various systems (PBS, Perún, OpenStack) and displays it in a web interface. The architecture is tightly coupled and uses multiple technologies, including C libraries and shell scripts.
+The existing solution is built as a monolithic Java application that collects data from various systems (PBS, Perun, OpenStack) and displays it in a web interface. The architecture is tightly coupled and uses multiple technologies, including C libraries and shell scripts.
 
 
 \newpage
@@ -147,7 +147,7 @@ Pbsmon collects following data from the following environments:
     \item Collection of Fairshare metrics from pbscache, which determine the user's priority when launching a job
     \item Collection of the /etc/group file from PBS, essential for assigning users to groups used in access control lists (ACLs)
   \end{itemize}
-  \item Perun environment - an identity and group management system. Returns information about users and the list of physical machines is collecte
+  \item Perun environment - an identity and group management system. Returns information about users and the list of physical machines.
   \item OpenStack environment - Information about virtual machines running on physical hosts
 \end{itemize}
 
@@ -173,6 +173,8 @@ The frontend is not implemented as a standalone application; it is an integral p
 
 One of the key features is so called \textbf{QSUB assembler}, which allows user to add required parameters for the job submission and pbsmon will notify the user about the nodes that fullfils the requirements. Among other, it produces a shell script that can be executed to submit the job to the PBS server with the required parameters
 
+All of this will be described in more detail in section \ref{sec:web-layer-and-user-interface}.
+
 \newpage
 \section{Data Collection from PBS Environment}
 \label{sec:data-collection-from-pbs-environment}
@@ -185,13 +187,13 @@ A compute node (also referred to as a host) represents the fundamental execution
 \subsection{Entities in PBS Environment}
 \label{subsec:entities-in-pbs-environment}
 
-PBS provides structured data that enables continuous monitoring of the computing environment operation, scheduler behavior, and resource utilization. From the PBS perspective, the following main entities are collected:
+PBS provides structured data that enables continuous monitoring of the computing environment operation, scheduler behavior, and resource utilization. From the PBS perspective, the following main entities are collected: \cite{pbs2022}
 
 
 \subsubsection{Server}
 \label{subsubsec:server-pbs-server}
 
-The PBS server is the authority for the entire cluster: it receives and registers jobs, maintains queues and nodes, tracks their states, and publishes global statistics (e.g., counts of jobs by state). It provides the following data:
+The PBS server is the authority for the entire cluster: it receives and registers jobs, maintains queues and nodes, tracks their states, and publishes global statistics (e.g., counts of jobs by state). It provides the following data: \cite{pbs2022}
 
 \begin{itemize}
   \item \textbf{Policies and limits} -- defines and enforces scheduling and resource utilization rules (limits on job and CPU counts, job array rules, rescheduling on node failure, scheduling enable/disable).
@@ -203,14 +205,14 @@ The PBS server is the authority for the entire cluster: it receives and register
   \item \textbf{Security and access} -- manages access policies through ACLs (hosts, users, managers/operators), supports Kerberos/realm policies, and handles credential management/renewal.
   
   \item \textbf{Operations and management} -- configures logging, email notifications, license quotas/counters, and system version; allows management of hooks and other server-level objects.
-\end{itemize}
+\end{itemize}\cite{pbs2022}
 
 \subsubsection{Jobs}
 \label{subsubsec:jobs}
 
-A job is the basic computational unit submitted by a user to the PBS server---it contains command(s) to execute and resource requirements (CPU, memory, time, GPU). The server queues it, schedules it to nodes, monitors its progress, and upon completion evaluates its result (including outputs and return code).
+A job is the basic computational unit submitted by a user to the PBS server---it contains command(s) to execute and resource requirements (CPU, memory, time, GPU). The server queues it, schedules it to nodes, monitors its progress, and upon completion evaluates its result (including outputs and return code).\cite{pbs2022} 
 
-A job can be a standalone task or a member of a job array (with multiple subjobs) sharing the same resource template. PBS provides the following data about jobs:
+A job can be a standalone task or a member of a job array (with multiple subjobs) sharing the same resource template. PBS provides the following data about jobs:\cite{pbs2022}
 
 \begin{itemize}
   \item \textbf{Identity and ownership} -- job ID and name, owner (Job\_Owner), project/VO (project), target queue (queue), server, and submit host.
@@ -224,12 +226,12 @@ A job can be a standalone task or a member of a job array (with multiple subjobs
   \item \textbf{I/O and environment} -- working directory (jobdir), stdout/stderr paths (Output\_Path, Error\_Path), submission arguments (Submit\_arguments), and environment variables (Variable\_List).
   
   \item \textbf{Result and diagnostics} -- return code (Exit\_status) and auxiliary fields for auditing and progress tracking.
-\end{itemize}
+\end{itemize}\cite{pbs2022}
 
 \subsubsection{Queues}
 \label{subsubsec:queues}
 
-A queue is a logical structure for accepting and processing jobs---it defines its type (Execution vs. Route), resource defaults and limits, access rules, and how jobs are either executed on nodes or redirected to target queues. PBS provides the following data about queues:
+A queue is a logical structure for accepting and processing jobs---it defines its type (Execution vs. Route), resource defaults and limits, access rules, and how jobs are either executed on nodes or redirected to target queues. PBS provides the following data about queues: \cite{pbs2022}
 
 \begin{itemize}
   \item \textbf{Identity and type} -- queue name, queue\_type (Execution/Route), Priority (weight in scheduling), operational state (enabled/started), and optionally hasnodes.
@@ -257,30 +259,138 @@ A queue is a logical structure for accepting and processing jobs---it defines it
   \item \textbf{Organizational tags} -- optional attributes such as fairshare\_tree (fairshare hierarchy) or partition (infrastructure label/partition) for logical segmentation and policy purposes.
 \end{itemize}
 
+\parencite{pbs2022}
 \subsubsection{Nodes}
 \label{subsubsec:nodes}
 
-TBD
+A node represents a physical machine in the PBS environment that provides computational resources for job execution. Each node is managed by the PBS server and can be in various operational states depending on its availability and current workload.  PBS provides the following data about nodes: \cite{pbs2022}
+
+\begin{itemize}
+  \item \textbf{Identity and location} -- node name (vnode), hostname (host), cluster identifier (resources\_available.cluster), and the name of the execution daemon (Mom) that manages the node. 
+  
+  \item \textbf{State and availability} -- primary state (state) indicating the operational status (e.g., free, job-busy, down, offline) and auxiliary state (state\_aux) providing additional context. 
+  
+  \item \textbf{Available resources} -- total capacity of the node defined by \texttt{resources\_available.*} attributes, including:
+  \begin{itemize}
+    \item CPU resources: ncpus (number of CPUs), pcpus (physical CPUs), cpu\_vendor, cpu\_flag (CPU feature flags)
+    \item Memory: mem (total memory), vmem (virtual memory), hpmem (high-performance memory)
+    \item Accelerators: ngpus (number of GPUs), gpu\_mem, gpu\_cap (compute capability), cuda\_version
+    \item Scratch storage: scratch\_local, scratch\_shared, scratch\_ssd, scratch\_shm (shared memory)
+    \item Network: ethernet\_speed, infiniband
+    \item Software: singularity (container support), os, osfamily, arch
+    \item Organizational: queue\_list (queues accessible from this node), cluster-specific tags
+  \end{itemize}
+  
+  \item \textbf{Assigned resources} -- currently allocated resources tracked by \texttt{resources\_assigned.*} attributes, including:
+  \begin{itemize}
+    \item ncpus, ngpus, naccelerators (number of assigned CPUs, GPUs, accelerators)
+    \item mem, vmem, hbmem, accelerator\_memory (assigned memory)
+    \item scratch\_local, scratch\_ssd (assigned storage)
+  \end{itemize}
+  
+  \item \textbf{Active jobs} -- list of job identifiers (jobs) currently running on the node, with each job identified by its ID and task index (e.g., 14964063.pbs-m1.metacentrum.cz/0). 
+  
+  \item \textbf{Sharing and placement} -- sharing mode (\texttt{sharing}) that determines resource allocation (e.g., \texttt{default\_shared}, \texttt{force\_exclusive}), and reservation support (\texttt{resv\_enable}). 
+  
+  \item \textbf{Timestamps} -- last\_state\_change\_time (timestamp of the last state transition) and last\_used\_time (timestamp when the node was last utilized). 
+\end{itemize} \cite{pbs2022}
+
+The distinction between available and assigned resources enables monitoring of node utilization, while the state information provides insight into node availability for job scheduling. The jobs list allows tracking which specific jobs are consuming resources on each node, which is essential for resource accounting and troubleshooting. 
 
 \subsubsection{Reservations}
 \label{subsubsec:reservations}
 
-TBD
+Reservations are a mechanism in PBS that allows nodes to be reserved for exclusive use during a specific time period. When a reservation is created, the specified nodes become unavailable for regular job scheduling. For each reservation, PBS automatically creates a dedicated queue that provides access to the reserved resources. \cite{pbs2022}
+
+PBS provides the following data about reservations:
+
+\begin{itemize}
+  \item \textbf{Identity} -- reservation name (Reserve\_Name), unique identifier (name), and the associated queue name (queue) that is created for the reservation. \cite{pbs2022}
+  
+  \item \textbf{Ownership and access} -- reservation owner (Reserve\_Owner) and list of authorized users (Authorized\_Users) \cite{pbs2022}
+  
+  \item \textbf{State information} -- reservation state (reserve\_state) and substate (reserve\_substate) indicating the current status of the reservation (e.g., active, confirmed, or in transition).  \cite{pbs2022}
+  
+  \item \textbf{Time constraints} -- reservation start time (reserve\_start), end time (reserve\_end), and duration (reserve\_duration) specified as Unix timestamps. \cite{pbs2022}
+  
+  \item \textbf{Resource requirements} -- the resources reserved by the reservation, including:
+  \begin{itemize}
+    \item Memory: Resource\_List.mem (total memory reserved)
+    \item CPUs: Resource\_List.ncpus (number of CPUs)
+    \item GPUs: Resource\_List.ngpus (number of GPUs, if applicable)
+    \item Nodes: Resource\_List.nodect (number of nodes) and Resource\_List.select (detailed node selection specification)
+    \item Placement: Resource\_List.place (placement policy, e.g., \texttt{free}, \texttt{exclhost})
+    \item Walltime: Resource\_List.walltime (maximum execution time for jobs in the reservation)
+  \end{itemize} \cite{pbs2022}
+  
+  \item \textbf{Reserved nodes} -- list of actual nodes allocated to the reservation (resv\_nodes) with their specific resource allocations. \cite{pbs2022}
+  
+  \item \textbf{Metadata} -- creation time (ctime), modification time (mtime), submission host (Submit\_Host), and partition information (partition, if applicable). \cite{pbs2022}
+  
+  \item \textbf{Retry information} -- reservation count (reserve\_count) and retry attempts (reserve\_retry) for tracking reservation lifecycle. \cite{pbs2022}
+\end{itemize}
+
 
 \subsubsection{Resources}
 \label{subsubsec:resources}
 
-TBD
+Resources in PBS represent units of computational capacity that can be requested by jobs, allocated to nodes, and managed by queues and the server. Each resource is defined with a unique name and attributes that specify its data type and where it can be used within the PBS system. \cite{pbs2022} 
+
+PBS provides a comprehensive list of all available resources in the system, where each resource definition includes: \cite{pbs2022}
+
+\begin{itemize}
+  \item \textbf{Resource name} -- the identifier used to reference the resource in job submissions, node configurations, and queue settings (e.g., \texttt{cput}, \texttt{mem}, \texttt{ncpus}, \texttt{ngpus}, \texttt{walltime}).
+  
+  \item \textbf{Type} -- the data type of the resource value, which determines how the resource is interpreted and validated. Common types include:
+  \begin{itemize}
+    \item \texttt{long} -- integer values (e.g., CPU count, GPU count)
+    \item \texttt{size} -- memory or storage values with units (e.g., bytes, KB, MB, GB)
+    \item \texttt{string} -- text values
+    \item \texttt{float} -- floating-point numeric values
+    \item \texttt{time} -- time duration values
+  \end{itemize}
+  
+  \item \textbf{Flag} -- a string of characters indicating where the resource can be used or referenced:
+  \begin{itemize}
+    \item \texttt{h} -- can be used at the host/node level
+    \item \texttt{q} -- can be used at the queue level
+    \item \texttt{n} -- can be used at the node level
+    \item \texttt{m} -- can be used at the server level 
+  \end{itemize}\cite{pbs2022} 
+\end{itemize}
 
 \subsubsection{Scheduler status}
 \label{subsubsec:scheduler-status}
 
-TBD
+The PBS scheduler is responsible for making decisions about which jobs to run, when to run them, and on which nodes to execute them.  A PBS system can have multiple schedulers, each managing a specific partition or set of resources. The scheduler continuously evaluates queued jobs against available resources and applies scheduling policies to optimize resource utilization and meet job requirements. \cite{pbs2022}
+
+PBS provides status information about each scheduler instance, including: \cite{pbs2022}
+
+\begin{itemize}
+  \item \textbf{Identity and location} -- scheduler name, the host where the scheduler daemon runs (sched\_host), and the partition it manages (partition).
+  
+  \item \textbf{Operational state} -- current state of the scheduler (e.g., \texttt{scheduling}, \texttt{idle}) and whether scheduling is enabled (scheduling).
+  
+  \item \textbf{Scheduling cycle} -- scheduler cycle length (sched\_cycle\_length) defining how frequently the scheduler evaluates and schedules jobs, and the current iteration count (scheduler\_iteration).
+  
+  \item \textbf{Processor set configuration} -- settings for processor set (pset) handling: do\_not\_span\_psets (prevents jobs from spanning multiple processor sets) and only\_explicit\_psets (restricts scheduling to explicitly defined processor sets).
+  
+  \item \textbf{Scheduling mode} -- throughput\_mode indicates whether the scheduler prioritizes throughput optimization, and opt\_backfill\_fuzzy (if present) specifies the backfill optimization level.
+  
+  \item \textbf{Preemption settings} -- configuration for job preemption: preempt\_queue\_prio (priority threshold for preemption), preempt\_prio (queues or job types that can be preempted), preempt\_order (preemption order strategy), and preempt\_sort (sorting method for preemption selection, e.g., \texttt{min\_time\_since\_start}).
+  
+  \item \textbf{Integration and hooks} -- job\_run\_wait specifies the hook that controls when jobs can start execution (e.g., \texttt{runjob\_hook}).
+  
+  \item \textbf{File system paths} -- sched\_priv (path to scheduler private directory) and sched\_log (path to scheduler log files).
+  
+  \item \textbf{Logging and monitoring} -- log\_events (bitmask specifying which events to log) and server\_dyn\_res\_alarm (alarm threshold for dynamic resource changes).
+\end{itemize} \cite{pbs2022}
 
 \subsubsection{Fairshare metrics}
 \label{subsubsec:fairshare-metrics}
 
-A list of users, their fairshare values, and the timestamp when the record was last modified.
+A list of users, their fairshare values, and the timestamp when the record was last modified. 
+fairshare values are used per scheduler.\cite{pbs2022}
 This data is retrieved for both the QSUB assembler and user monitoring purposes.
 
 \newpage
@@ -452,6 +562,7 @@ Whenever we need to retrieve the historical data about finished jobs, we need to
 TBD - describe the authentication mechanism, using OIDC token, that is provided by the third party system.
 
 \section{Web Layer and User Interface}
+\label{sec:web-layer-and-user-interface}
 TBD - This is available only to the logged in users.
 Layout description, showing some Figure, Describing the views:
 
@@ -465,7 +576,21 @@ Layout description, showing some Figure, Describing the views:
 \newpage
 \subsection{Personal view}
 \label{subsec:personal-view}
-TBD - important, mostly used, ....
+The Personal view serves as the main dashboard for users, representing one of the most important and frequently used features of Pbsmon. This view provides users with an overview of their job statistics and quick access to other relevant pages.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{figures/old-pbsmon-personal-view.png}
+  \caption{Personal view dashboard in the old Pbsmon}
+  \label{fig:old-pbsmon-personal-view}
+\end{figure}
+
+The dashboard displays total counts of jobs associated with the user. However, since PBS always returns the current state of the system, the Personal view focuses on showing counts of \textit{relevant} jobs---those that are considered active. Specifically, this includes jobs that are currently in the queue, currently running, or have finished within the previous few days. This filtering ensures that users see meaningful information about their recent and ongoing computational work, rather than being overwhelmed by historical data from all past jobs.
+
+The Personal view also contains links to other pages within the system. One such link leads to the "My jobs" page, which displays detailed information about the user's jobs. This functionality is highly relevant and could be directly incorporated into the new dashboard within the new solution, as it provides essential job management capabilities. Another link directs users to the "Queue" page, which shows information about job queues across the system. While this information is useful, it is considered less relevant for individual users and therefore does not need to be included in the new dashboard.
+
+One limitation of the current implementation is that the dashboard only displays CPU usage and does not include GPU resources. This limitation stems from the fact that GPU usage was not a significant concern at the start of the old Pbsmon development, but has since become increasingly important as GPU computing has gained prominence in the MetaCentrum infrastructure.
+
 
 \subsection{QSUB assembler}
 \label{subsec:qsub-assembler}
@@ -481,6 +606,7 @@ TBD - Strength and weaknesses
 
 \chapter{Design of the New Solution}
 \label{chap:design}
+
 
 \section{Functional requirements}
 \label{sec:functional-requirements}
