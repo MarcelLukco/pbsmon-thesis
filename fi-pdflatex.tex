@@ -304,13 +304,13 @@ Reservations are a mechanism in PBS that allows nodes to be reserved for exclusi
 PBS provides the following data about reservations:
 
 \begin{itemize}
-  \item \textbf{Identity} -- reservation name (Reserve\_Name), unique identifier (name), and the associated queue name (queue) that is created for the reservation. \cite{pbs2022}
+  \item \textbf{Identity} -- reservation name (Reserve\_Name), unique identifier (name), and the associated queue name (queue) that is created for the reservation.
   
-  \item \textbf{Ownership and access} -- reservation owner (Reserve\_Owner) and list of authorized users (Authorized\_Users) \cite{pbs2022}
+  \item \textbf{Ownership and access} -- reservation owner (Reserve\_Owner) and list of authorized users (Authorized\_Users).
   
-  \item \textbf{State information} -- reservation state (reserve\_state) and substate (reserve\_substate) indicating the current status of the reservation (e.g., active, confirmed, or in transition).  \cite{pbs2022}
+  \item \textbf{State information} -- reservation state (reserve\_state) and substate (reserve\_substate) indicating the current status of the reservation (e.g., active, confirmed, or in transition).
   
-  \item \textbf{Time constraints} -- reservation start time (reserve\_start), end time (reserve\_end), and duration (reserve\_duration) specified as Unix timestamps. \cite{pbs2022}
+  \item \textbf{Time constraints} -- reservation start time (reserve\_start), end time (reserve\_end), and duration (reserve\_duration) specified as Unix timestamps.
   
   \item \textbf{Resource requirements} -- the resources reserved by the reservation, including:
   \begin{itemize}
@@ -320,11 +320,11 @@ PBS provides the following data about reservations:
     \item Nodes: Resource\_List.nodect (number of nodes) and Resource\_List.select (detailed node selection specification)
     \item Placement: Resource\_List.place (placement policy, e.g., \texttt{free}, \texttt{exclhost})
     \item Walltime: Resource\_List.walltime (maximum execution time for jobs in the reservation)
-  \end{itemize} \cite{pbs2022}
+  \end{itemize}
   
-  \item \textbf{Reserved nodes} -- list of actual nodes allocated to the reservation (resv\_nodes) with their specific resource allocations. \cite{pbs2022}
+  \item \textbf{Reserved nodes} -- list of actual nodes allocated to the reservation (resv\_nodes) with their specific resource allocations.
   
-  \item \textbf{Metadata} -- creation time (ctime), modification time (mtime), submission host (Submit\_Host), and partition information (partition, if applicable). \cite{pbs2022}
+  \item \textbf{Metadata} -- creation time (ctime), modification time (mtime), submission host (Submit\_Host), and partition information (partition, if applicable).
   
   \item \textbf{Retry information} -- reservation count (reserve\_count) and retry attempts (reserve\_retry) for tracking reservation lifecycle. \cite{pbs2022}
 \end{itemize}
