@@ -678,10 +678,54 @@ TBD - using figma see appendix
 \label{sec:architecture-design}
 TBD
 
+\newpage
 \section{Selected technologies}
 \label{sec:selected-technologies}
-TBD
 
+As mentioned earlier, the original solution was implemented as a web application. The new solution will also take the form of a web application, but it will be built on a different technology stack. When selecting the technologies, it was important to take into account current trends in web development, as well as future maintainability and extensibility.
+
+As described in Section \ref{sec:architecture-design}, the new solution should be conceptually divided into two parts: an API and a frontend. To simplify development and maintenance, JavaScript was chosen as the primary programming language, enabling both parts of the system to be implemented in the same language. Specifically, NestJS is used for the API layer and React for the frontend. These technologies are described in more detail in the following subsections.
+
+\subsection{NestJS}
+
+NestJS is a progressive Node.js framework designed for building efficient, reliable and scalable server-side applications. It leverages TypeScript as its primary language, while still supporting plain JavaScript. The framework is heavily inspired by architectural patterns known from enterprise environments, such as the Model–View–Controller (MVC) pattern and layered architectures, and it emphasises concepts like modules, controllers and providers. \cite{nestjs2025}
+
+One of the main advantages of NestJS is its modular architecture. The application is structured into self-contained modules, which encapsulate related functionality. This organisation improves the readability of the codebase and simplifies long-term maintenance and extensibility. NestJS also provides built-in support for dependency injection, which encourages loose coupling between components and facilitates testing. \cite{nestjs2025}
+
+According to articles \cite{nestjs2025-devto, nestjsbackend2025}, NestJS is well suited for backend development and has accumulated more than 60,000 stars on GitHub, placing it among the world’s most popular backend frameworks. It is a modern, flexible and powerful framework that is gaining popularity thanks to its strong TypeScript support, modular architecture and mature ecosystem.
+
+For these reasons, NestJS was chosen as the framework for implementing the API layer of the new solution.
+
+\subsection{React}
+
+React is a JavaScript library for building user interfaces using a declarative, component-based model. It allows composing complex views from smaller reusable components and integrates well with modern JavaScript and TypeScript tooling. \cite{react-docs}
+
+In this project, React is used as a purely client-side rendered frontend. Rendering of the user interface is thus offloaded from the server to the client, which reduces the load on the backend API and simplifies the server-side implementation. The main trade-off of client-side rendering is weaker support for search engine optimisation (SEO) compared to server-side rendering or static site generation. However, SEO is not required in this system, as it targets authenticated users and is not intended for public indexing. For this reason, a purely client-side React application is sufficient and avoids additional complexity. \cite{react-docs}
+
+React was chosen mainly due to its wide adoption, mature ecosystem and good TypeScript support, which make it a suitable choice for the frontend part of the solution \cite{react-docs}.
+
+
+\subsubsection{Tailwind CSS}
+
+Tailwind CSS is a utility-first CSS framework that provides a set of pre-defined classes for styling HTML elements. It is designed to be used in conjunction with React, allowing for a more efficient and consistent styling approach. Tailwind CSS is a popular choice for modern web development due to its ease of use, flexibility and performance. \cite{tailwindcss2025}
+
+I have chosen Tailwind CSS due to its popularity and ease of use. It is a popular choice for modern web development and is a good fit for the new solution.
+
+\subsection{Nginx}
+
+Nginx ("engine x") is a high-performance HTTP web server and reverse proxy that can also act as a load balancer and content cache. It is designed to handle a large number of concurrent connections with low resource usage, which makes it suitable as an entry point for web applications.  \cite{nginx-docs}
+
+In this project, Nginx is used primarily as a reverse proxy in front of the backend API and as a static file server for the React frontend. Requests to the API are forwarded from Nginx to the NestJS application, while requests for frontend assets are served directly from Nginx. This setup enables centralised configuration of TLS termination, request routing and basic security headers, while the application servers focus on business logic. \cite{nginx-docs}
+
+As mentioned in the section \ref{sec:architecture-design}, the new solution consists of separate modules — the API and the frontend — Nginx is used to provide a single unified interface to the outside world. Both parts of the system are exposed under one domain and port, and the internal structure is hidden from clients, which simplifies deployment and future maintenance. 
+
+\subsection{Docker}
+\label{subsec:docker}
+%% \todo - Some explanation about docker and history of dockerization, why it is used
+
+Docker is a platform for building, distributing and running applications in lightweight containers. A container packages the application together with its runtime dependencies and configuration, which makes the resulting environment reproducible across different machines. \cite{docker-docs}
+
+In this project, Docker is used to containerise the backend API, the frontend and supporting services (such as Nginx). Each service runs in its own container, while a shared configuration (e.g.\ using \texttt{docker-compose}) defines how the containers are connected and started. This approach simplifies local development, testing and deployment, as the entire system can be started or stopped with a single command and behaves consistently across environments. \cite{docker-docs}
 
 
 \chapter{Implementation}
@@ -706,25 +750,12 @@ TBD - realized using OpenAPI, automatically generated from code, see appendix
 TBD
 
 
-\chapter{Testing and Evaluation}
+\chapter{Future improvements}
 
-\section{Unit tests}
-\label{sec:unit-tests}
-TBD
-
-\section{Integration tests}
-\label{sec:integration-tests}
-TBD
-
-\section{Performance tests}
-\label{sec:performance-tests}
-TBD
 
 
 \chapter{Deployment}
 TBD
-
-\chapter{Future improvements}
 
 
 \chapter*{Conclusion}
