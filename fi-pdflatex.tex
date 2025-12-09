@@ -66,9 +66,9 @@
     thanks      = {%
     First and foremost, I would like to express my sincere gratitude to my supervisor, Mgr. Miroslav Ruda, for his valuable guidance, insightful comments, and continuous support throughout the development of this thesis.
 
-    I would also like to thank RNDr. Martin Kuba, Ph.D., for his technical assistance and expertise, which significantly contributed to the practical part of this work.
+    I would also like to thank Mgr. Václav Chlumský, for his technical assistance and expertise, which significantly contributed to the practical part of this work.
     
-    My thanks also go to Mgr. Václav Chlumský, Ing. František Řezníček, and Mgr. Ivana Křenková for their collaboration, helpful advice, and support during the integration with related systems.
+    My thanks also go to Ing. František Řezníček, and Mgr. Ivana Křenková for their collaboration, helpful advice, and support during the integration with related systems.
     },
     bib         = example.bib,
     %% Remove the following line to use the JVS 2018 faculty logo.
@@ -291,8 +291,8 @@ A node represents a physical machine in the PBS environment that provides comput
   
   \item \textbf{Sharing and placement} -- sharing mode (\texttt{sharing}) that determines resource allocation (e.g., \texttt{default\_shared}, \texttt{force\_exclusive}), and reservation support (\texttt{resv\_enable}). 
   
-  \item \textbf{Timestamps} -- last\_state\_change\_time (timestamp of the last state transition) and last\_used\_time (timestamp when the node was last utilized). 
-\end{itemize} \cite{pbs2022}
+  \item \textbf{Timestamps} -- last\_state\_change\_time (timestamp of the last state transition) and last\_used\_time (timestamp when the node was last utilized). \cite{pbs2022}
+\end{itemize}
 
 The distinction between available and assigned resources enables monitoring of node utilization, while the state information provides insight into node availability for job scheduling. The jobs list allows tracking which specific jobs are consuming resources on each node, which is essential for resource accounting and troubleshooting. 
 
