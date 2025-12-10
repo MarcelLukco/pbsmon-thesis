@@ -664,21 +664,192 @@ In summary, while PBSmon has been functional and valuable, its monolithic archit
 
 \chapter{Design of the New Solution}
 \label{chap:design}
+Building upon the analysis in Chapter~\ref{chap:analysis}, this chapter focuses on the design of a modern replacement for the original PBSmon system. The goal is to propose a solution that not only preserves the existing functionality, but also improves maintainability, usability and alignment with current infrastructure and security requirements.
 
+In addition to the functional rewriting of the existing features, the new design must introduce first-class support for working with OpenStack. In particular, it has to enable users to view OpenStack projects, the virtual machines assigned to them, and other relevant metadata in a clear and structured manner consistent with how resources are organised in the underlying cloud environment.
 
-\section{Functional requirements}
+Furthermore, the design addresses the potential GDPR issue identified in Chapter~\ref{chap:analysis}, where personal computational activity may become visible to other users. To mitigate this risk, the new solution introduces a simple role model with two distinct roles: \emph{user} and \emph{admin}. This separation of privileges restricts access to sensitive information and ensures that operations affecting other users or system-wide configuration are only available to administrators.
+
+The remainder of this chapter is structured as follows. Section~\ref{sec:functional-requirements} defines the functional requirements derived from the analysis and target use cases. Section~\ref{sec:gui-design} outlines the user interface design of the new application. Section~\ref{sec:architecture-design} describes the overall system architecture, including the division into backend and frontend parts. Finally, Section~\ref{sec:selected-technologies} justifies the selection of the technologies used to implement the proposed design.
+
+\section{Functional Requirements}
 \label{sec:functional-requirements}
-TBD
 
-\section{GUI design}
-\label{sec:gui-design}
-TBD - using figma see appendix
+The goal of the new solution is to provide a read-only monitoring application that aggregates information from multiple data sources used in MetaCentrum. The system does not modify the state of the underlying infrastructure; instead, it offers a unified user interface for viewing job information, infrastructure topology and cloud resources. Access to this information is controlled by a simple role model with two roles: \emph{user} and \emph{admin}. An administrator can perform all actions available to a regular user, plus additional operations related to support and diagnostics.
 
-\section{Architecture design}
-\label{sec:architecture-design}
-TBD
+\subsection{Domain Entities and Data Sources}
+\label{sec:domain-entities}
+
+The new solution reuses most of the domain model of the original PBSmon application and extends it with entities from the OpenStack environment. PBS and Perun entities were already introduced in the description of the existing solution (see Chapter~\ref{chap:analysis}); this section briefly summarises them and then focuses on the new OpenStack concepts that motivate several of the following requirements.
+
+\subsubsection*{PBS and Perun (recap)}
+
+From PBS, the application uses primarily jobs, nodes, queues, reservations and fairshare entries, together with UNIX groups obtained from the \texttt{/etc/group} file to determine relationships between users. From Perun, it reuses the list of users with richer metadata (full name, organisation, \dots) and the description of the MetaCentrum infrastructure, including organisations, clusters and their nodes. For a detailed description of these entities, see Chapter~\ref{chap:analysis}.
+
+\subsubsection*{OpenStack entities}
+
+The new solution also obtains more detailed information from the OpenStack cloud environment. Two main entities are relevant for the design:
+
+\begin{itemize}
+  \item \textbf{Project} -- a logical container that owns cloud resources. Each project has an owner (either an individual user or a group), a date of creation and assigned resources (quotas). Projects can therefore represent both individual and group activities.
+  \item \textbf{Virtual machine (VM)} -- a virtual machine instance assigned to a specific project. For each VM, the system needs to track at least its name, associated project and creation time, so that it can be attributed to the correct user or group in the monitoring interface.
+\end{itemize}
+
+These OpenStack entities are used in the functional requirements below, in particular in the personal view for users and in the infrastructure overview.
+
+\subsection{Roles and Access Control}
+The system defines two roles:
+
+\begin{itemize}
+  \item \textbf{User} -- a regular MetaCentrum user. A user has access primarily to information related to their own activity and to entities connected to their UNIX groups. Global information is either anonymised or aggregated where necessary.
+  \item \textbf{Admin} -- an administrative user. An admin can see complete, non-anonymised information across all users and resources and can impersonate other users for troubleshooting and support. An admin has all capabilities of a regular user.
+\end{itemize}
+
+\subsection{Functional Requirements for Users}
+
+A regular user must be able to use the application as a personal monitoring dashboard and as a tool for exploring the infrastructure relevant to their work. The following functional requirements apply:
+
+\begin{description}
+  \item[FR-01 Personal overview]  
+  The system shall provide a personal view (dashboard) where a user can see a summary of their total usage statistics, their recent and active PBS jobs, and their OpenStack projects.
+
+  \item[FR-02 View own jobs]  
+  The system shall allow a user to list and inspect the details of their own PBS jobs, including state, queue, submission time, requested resources and basic runtime information.
+
+  \item[FR-03 View global jobs with anonymisation]  
+  The system shall allow a user to browse all PBS jobs in the system. Jobs owned by other users shall be anonymised, except when the owner is:
+  \begin{itemize}
+    \item the current user, or
+    \item a user belonging to one of the same UNIX groups as the current user.
+  \end{itemize}
+  In these cases, the real user identity shall be shown.
+
+  \item[FR-04 View OpenStack projects and VMs]  
+  The system shall allow a user to view all OpenStack projects associated with them and to list the virtual machines assigned to each of these projects, including basic metadata (such as name and creation date).
+
+  \item[FR-05 View queues]  
+  The system shall provide an overview of all PBS queues, including their basic configuration and purpose, so that users can understand where their jobs are being scheduled.
+
+  \item[FR-06 View infrastructure and reservations]  
+  The system shall provide a view of the MetaCentrum infrastructure based on Perun data, showing organisations, clusters and nodes, together with information about existing reservations on these resources. Only reservation information shall be displayed; actual usage of the resources is out of scope due to missing data.
+
+  \item[FR-07 View users within groups]  
+  The system shall allow a user to see basic information about other users who belong to the same UNIX groups, using data from \texttt{/etc/group}.
+
+  \item[FR-08 View own group membership]  
+  The system shall display the current user's group membership as derived from \texttt{/etc/group}, so that the user understands which groups they are associated with.
+
+  \item[FR-09 View fairshare information]  
+  The system shall display fairshare information relevant to the current user, derived from the PBS fairshare entries, and optionally allow comparison with other users in the same groups.
+
+  \item[FR-10 QSUB assembler]  
+  The system shall provide a ``QSUB assembler'' -- an interactive interface that helps the user construct a valid \texttt{qsub} command by selecting queues, resources and other parameters. The result shall be presented in a form that can be copied and used in a terminal. Alltogether with the list of nodes that fullfils the requirements.
+
+  \item[FR-11 Detail pages]  
+  For all major entities (job, node, queue, project, VM, reservation, user), the system shall offer detail pages accessible from overview tables, with information limited according to the user's role and the anonymisation rules described above.
+\end{description}
+
+\subsection{Functional Requirements for Admins}
+
+Administrators require a complete, non-anonymised view of the system in order to support users and diagnose problems. In addition to FR-01~--~FR-11, the following requirements apply:
+
+\begin{description}
+  \item[FR-12 Full visibility]  
+  The system shall allow an admin to see all available data for all users, jobs, queues, infrastructure elements, projects and VMs without anonymisation.
+
+  \item[FR-13 User impersonation]  
+  The system shall allow an admin to impersonate a selected user, i.e., to temporarily view the application exactly as that user would see it (including all access restrictions and anonymisation). This functionality is intended solely for support and debugging.
+
+\end{description}
+
+These functional requirements form the basis for the graphical user interface design described in Section~\ref{sec:gui-design} and for the architecture of the new solution discussed in Section~\ref{sec:architecture-design}.
 
 \newpage
+\section{Graphical User Interface Design}
+\label{sec:gui-design}
+
+A key part of the new solution is the redesign of the graphical user interface (GUI). The existing application has grown over time and its interface is not intuitive for new users, which makes common tasks unnecessarily difficult and increases the learning curve. To improve usability, it was necessary to propose a clearer and more consistent user interface that better reflects typical workflows and makes important information easier to find.
+
+At the same time, the current users are already familiar with the existing interface and rely on established interaction patterns. A radical change to the layout or navigation could therefore have a negative impact on productivity and would likely be met with resistance. The GUI design of the new solution therefore aims for an evolutionary rather than revolutionary change: it introduces a more intuitive structure and visual hierarchy, but preserves similar navigation concepts and overall information density so that experienced users can adapt quickly.
+
+Another important requirement was to keep the visual identity of the MetaCentrum computing grid\footnote{\url{https://www.metacentrum.cz/en/}}. The brand colour is a distinctive shade of orange, which is already used in existing tools and documentation and therefore forms an important part of the user experience. However, large orange areas on the screen can be visually tiring and, in extreme cases, reduce readability. For this reason, the new interface is based on a dark grey theme that serves as a neutral background, while orange is used as an accent colour for interactive elements such as primary buttons, active navigation items and important status indicators. This approach preserves the recognisable MetaCentrum brand while improving visual comfort during long-term use.
+
+For the design process, the Figma tool was used to create the visual specification of the interface. In Figma, a set of basic building blocks was first defined as reusable components, ensuring consistency across the entire application and simplifying future modifications. On top of these components, the main layout was designed, including a sidebar menu for navigation between the key parts of the application and a content area for displaying overviews and detail views. The resulting design of the new personal view is illustrated in Figure~\ref{fig:new-pbsmon-gui-design} and serves both as a communication tool with stakeholders and as a reference for the implementation of the frontend.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=0.5\textwidth]{figures/figma-personal-view.png}
+  \caption{Figma design of the new personal view}
+  \label{fig:new-pbsmon-gui-design}
+\end{figure}
+
+
+\section{Architecture Design}
+\label{sec:architecture-design}
+
+The new solution is designed as a two-layer web application consisting of a backend API and a separate frontend. The backend exposes the domain data and operations through a JSON-based HTTP API, while the frontend is responsible for rendering the user interface and handling user interaction in the browser. This separation follows a common pattern used in modern web applications and reflects the requirements for flexibility, maintainability and potential reuse of the data layer.
+
+Both layers are developed in a single monorepository (monorepo). The monorepo contains the API and frontend as separate packages (or subprojects) that may share common code where appropriate (for example domain models or API client definitions), while still preserving a clear logical separation between the two layers.
+
+\subsection{Overview of the Two-Layer Architecture}
+
+The backend API layer integrates data from PBS, Perun and OpenStack, transforms them into a unified domain model and enforces the access control rules based on the \emph{user} and \emph{admin} roles. It is implemented as a stateless web service that returns all responses in JSON format. Its only responsibility is to serve data and perform server-side computations such as aggregation, filtering and anonymisation.
+
+The frontend layer is implemented as a separate web application that runs in the user's browser. It communicates with the API using HTTP requests, consumes the JSON responses and renders them into the graphical user interface described in Section~\ref{sec:gui-design}. The frontend handles navigation between views, local state management (e.g. filters and sorting) and presents the data in tables, charts and detail pages.
+
+\subsection{API Layer}
+
+The API layer acts as an integration and abstraction layer over the underlying systems:
+
+\begin{itemize}
+  \item It collects data from PBS, Perun and OpenStack and periodically fetches the necessary entities (jobs, nodes, queues, reservations, users, infrastructure descriptions, projects, virtual machines, \dots).
+  \item It normalises and combines the collected data into a consistent model tailored to the needs of the monitoring application.
+  \item It implements role-based access control and anonymisation rules as described in the functional requirements, including the distinction between regular users and administrators.
+  \item It exposes the data through a set of endpoints that return JSON, covering overviews (e.g. lists of jobs or projects) as well as detail views for individual entities.
+\end{itemize}
+
+By concentrating all domain logic and access control in the API, the system ensures that the same rules are applied consistently regardless of the client and that sensitive operations cannot be bypassed by directly accessing the underlying systems.
+
+\subsection{Frontend Layer}
+
+The frontend layer consumes the API and transforms the JSON data into an interactive web interface:
+
+\begin{itemize}
+  \item It provides the personal view for users, including their own statistics, jobs and OpenStack projects.
+  \item It renders overviews of jobs, queues, infrastructure and reservations, with client-side filtering and sorting where appropriate.
+  \item It presents anonymised or full data depending on the current role, based on information obtained from the API.
+  \item It implements the QSUB assembler, where the user selects parameters and the frontend assembles a command that can be copied to a terminal.
+\end{itemize}
+
+Because the frontend is decoupled from the backend at the API boundary, it can be developed and iterated independently at the application level, even though both parts live in the same monorepo. The visual design can evolve without changes to the data layer as long as the API contract remains stable.
+
+\subsection{Rationale, Advantages and Disadvantages}
+
+The choice of a two-layer architecture with a JSON-based API and a separate frontend, implemented together in a monorepo, was motivated by several considerations.
+
+Among the main advantages are:
+
+\begin{itemize}
+  \item \textbf{Separation of concerns} -- the API focuses on data integration, business logic and security, while the frontend focuses on user experience and presentation. This separation simplifies reasoning about each part and reduces coupling.
+  \item \textbf{Reuse and extensibility} -- the API can later be reused by other clients (for example command-line tools, scripts or additional internal applications) without changes to the core logic. New frontend features can be added as long as they build on the existing endpoints.
+  \item \textbf{Monorepo code sharing} -- keeping the API and frontend in a single monorepo enables straightforward sharing of common code, such as type definitions, domain models or API client libraries, which reduces duplication and the risk of inconsistencies between layers.
+  \item \textbf{Coordinated development} -- the monorepo makes it easy to evolve the API and frontend together in a single change set, while the architectural separation still allows developers to work on backend and frontend parts with clear boundaries.
+  \item \textbf{Potential for independent deployment} -- even though the code is stored in a single repository, the API and frontend can be built and deployed as separate artefacts if needed (for example scaling the API independently), which is important for handling peaks in monitoring queries.
+  \item \textbf{Security} -- all access control and anonymisation logic is centralised in the API layer, so there is a single place where role-based rules are enforced and audited.
+\end{itemize}
+
+The chosen architecture also has disadvantages that need to be acknowledged:
+
+\begin{itemize}
+  \item \textbf{Increased operational complexity compared to a monolithic server-rendered application} -- there are two logical components (API and frontend) that must be configured to communicate correctly, including handling of authentication and possible cross-origin restrictions, even though they are stored in one repository.
+  \item \textbf{Network overhead} -- every interaction between the user and the data layer requires HTTP requests from the browser to the API, which may introduce additional latency compared to server-side rendering directly coupled to the data sources.
+  \item \textbf{Duplication of validation and error handling} -- some validation and error reporting needs to be implemented both in the API (for correctness and security) and in the frontend (for user-friendly messages), which slightly increases implementation effort.
+  \item \textbf{Monorepo maintenance} -- while a monorepo simplifies code sharing, it also requires consistent tooling and conventions to keep the structure manageable as the project grows.
+\end{itemize}
+
+Despite these drawbacks, the benefits of a clear separation between the data layer and the user interface, combined with the practical advantages of a monorepo for this relatively small project, were considered more important. In particular, the need to integrate multiple heterogeneous data sources, enforce non-trivial access rules and support future extensions favours an API-centric architecture. The resulting design provides a flexible and maintainable foundation for the new PBSmon replacement.
+
+
 \section{Selected technologies}
 \label{sec:selected-technologies}
 
