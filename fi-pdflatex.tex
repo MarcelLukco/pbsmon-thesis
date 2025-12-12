@@ -1019,7 +1019,10 @@ These files were described in more detail in section~\ref{subsec:entities-in-per
 
 
 \subsection{OpenStack data collection}
-TBD - using prometheus program - that was describe in some non existing section - these data stores only into memory and are not collected to the filesystem. 
+\label{subsec:openstack-data-collection}
+In addition to PBS- and Perun-derived datasets, the system collects selected operational and inventory information related to the OpenStack environment. These data are obtained from a Prometheus server, which provides metrics and metadata exported by infrastructure components and custom exporters \cite{PrometheusOverview}. Unlike PBS and Perun data (which are loaded from files), the Prometheus-derived data are treated as a \emph{live} source and are therefore not persisted to the filesystem. Instead, the latest successful snapshot is stored only in the application memory and served through the API on demand.
+
+The collection logic is implemented in the \texttt{Prometheus\-Collection\-Service}. The service defines a fixed set of prometheus queries that cover both hardware-related metrics (CPU, memory, GPU, disks, networking) and OpenStack-specific inventory data (projects, VM's, and users). The collecting proccess iterates over the configured queries and executes them sequentially. Each query result is stored under a human-readable key (the query \texttt{name}) together with a timestamp representing the time of the snapshot creation. If a query fails, the error is logged and collection continues, so that partial data can still be exposed to the frontend.
 
 
 \subsection{Documentation}
