@@ -695,8 +695,7 @@ This thesis does not adopt Thanos, because the primary goal is to provide a reli
 \section{Kubernetes}
 Kubernetes is an open-source container orchestration platform for automating deployment, scaling, and management of containerized applications \cite{KubernetesDocs,Burns2022Kubernetes}. It provides a declarative model for running workloads, service discovery, and operational automation that is now standard in cloud-native environments \cite{KubernetesDocs,Burns2022Kubernetes}.
 
-MetaCentrum (within e-INFRA CZ) also operates a container platform based on Kubernetes, including a Rancher-based distribution and related user-facing tooling \cite{EinfraHPCKubernetes}. This is relevant for PBSmon for two reasons. First, Kubernetes-based services are part of the broader infrastructure portfolio and strengthen the requirement for modularity and extensibility of monitoring solutions. Second, if monitoring is unified across multiple runtime environments (PBS grid and Kubernetes clusters), future PBSmon modules may benefit from shared concepts (service health, resource utilization, user-to-project mapping) even if the underlying scheduling mechanisms differ \cite{EinfraHPCKubernetes,KubernetesDocs}.
-
+MetaCentrum (within e-INFRA CZ) also operates a container platform based on Kubernetes, including a Rancher-based distribution and related user-facing tooling \cite{EinfraHPCKubernetes}. This is relevant for PBSmon because Kubernetes-based services are part of the broader infrastructure portfolio and strengthen the requirement for modularity and extensibility of monitoring solutions.
 
 \chapter{Design of the New Solution}
 \label{chap:design}
