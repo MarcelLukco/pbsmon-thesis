@@ -994,146 +994,175 @@ TBD - using prometheus program - that was describe in some non existing section 
 The API contract is described using an OpenAPI specification, which defines the available endpoints, their parameters, and response schemas. In addition to the static specification, the implementation exposes a Swagger UI that renders the OpenAPI document and provides an interactive interface for exploring and testing the API. This allows developers and administrators to call individual endpoints directly from the browser, inspect responses, and verify the expected behaviour without requiring external tools. The OpenAPI specification is included within the thesis archive.
 
 
-\section{Page views}
+\section{Frontend - page views}
 \label{sec:page-views}
 This section describes the implemented frontend page views and how they present monitoring information to end users. Each view corresponds to a specific domain area of the system (e.g., jobs, nodes, queues, outages, news, or OpenStack-related data) and is implemented as a composition of reusable UI components such as tables, filters, and detail panels. The pages obtain all data exclusively through the backend JSON API, which keeps the frontend independent of the underlying infrastructure protocols and allows the UI to evolve without changing data-collection logic.
 
 % For every page view, the following aspects are documented: its purpose and displayed data, the API endpoints it consumes, and the main interaction patterns provided to the user (sorting, filtering, paging, and error/loading states). This makes the connection between the backend modules and the user-facing interface explicit and shows how the collected data are transformed into actionable monitoring views.
 
-
-\subsubsection{Layout}
+\paragraph{Layout}
 TBD - describe layout and navigation, the lists of page views 
 
 
 \subsection{Personal view}
-\label{subsec:personal-view}
-TBD - describe the personal view and its data.
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image of the page
+\label{subsec:new-personal-view}
+TBD
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image of the page
+\end{itemize}
 
 
 \subsection{QSUB assembler}
-\label{subsec:qsub-assembler}
+\label{subsec:new-qsub-assembler}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image of the page
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image of the page
+\end{itemize}
 
 \subsection{Machines}
 \label{subsec:machines}
 
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image of the page
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image of the page
+\end{itemize}
 
 \subsubsection{Node detail view}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image??
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image??
+\end{itemize}
 
 \subsection{Storage spaces}
 \label{subsec:storage-spaces}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image of the page
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image of the page
+\end{itemize}
 
 \subsection{Cloud Projects}
 \label{subsec:projects}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image of the page
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image of the page
+\end{itemize}
 
 \subsubsection{Project detail view}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image??
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image??
+\end{itemize}
 
 
 \subsection{Jobs Queues}
 \label{subsec:queues}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image of the page
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image of the page
+\end{itemize}
 \subsubsection{Queue detail view}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image??
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image??
+\end{itemize}
 
 \subsection{Jobs}
 \label{subsec:jobs}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image of the page
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image of the page
+\end{itemize}
 
 \subsubsection{Job detail view}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image??
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image??
+\end{itemize}
 
 \subsection{Users}
 \label{subsec:users}
 
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image??
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image??
+\end{itemize}
 
 \subsubsection{User detail view}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
-- Image??
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+  \item Image??
+\end{itemize}
 
 \subsection{Users groups}
 \label{subsec:groups}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+\end{itemize}
 
 \subsubsection{Group detail view}
 TBD
-- purpose 
-- displayed data + user interactions 
-- API endpoints
-- covered use cases
+\begin{itemize}
+  \item purpose 
+  \item displayed data + user interactions 
+  \item API endpoints
+  \item covered use cases
+\end{itemize}
 
 
 \section{Comparison with the legacy solution}
