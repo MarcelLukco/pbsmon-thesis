@@ -904,18 +904,95 @@ In this project, Docker is used to containerise the backend API, the frontend an
 \chapter{Implementation}
 \label{chap:implementation}
 
+This chapter describes the implementation of the new PBSmon solution. The main objective was not only to migrate the legacy monolithic system to a modern technology stack, but also to deliver a maintainable and extensible codebase that supports the current scope of MetaCentrum infrastructure. In particular, the implementation covers monitoring data obtained from the PBS scheduling environment and extends the original functionality by integrating OpenStack as an additional data source.
+
+The resulting system is implemented as a separated backend and frontend that communicate via a JSON API. This separation enables clearer responsibility boundaries, simplifies testing, and allows both parts to evolve independently. At the same time, the implementation keeps the core purpose of PBSmon intact: regularly collecting infrastructure metadata, normalizing it into a consistent representation, and presenting it to users in a readable form.
+
+
+\section{Authorization and Authentication}
+\label{sec:authorization-and-authentication}
+TBD - using Perun's e-infra AAI, using OIDC token
+
 \section{System Architecture}
 \label{sec:system-architecture-new}
 
-TBD
+This chapter describes the implementation of PBSmon 2.0 and explains how the individual parts of the system were realized in code. The project is implemented as a monorepo and consists of multiple runtime components that together provide data collection, a JSON API, and a web-based user interface. The repository is structured into the following main components:
+
+
+\begin{itemize}
+  \item \texttt{api/} -- backend service exposing a JSON API consumed by the frontend. It aggregates and normalizes monitoring data from the supported infrastructure sources (PBS, Perun and OpenStack).
+  \item \texttt{web/} -- frontend web application responsible for rendering page views and visualizing the collected monitoring data.
+  \item \texttt{pbs-collector/} -- a dedicated micro-service for periodic data acquisition from PBS environment. Described in more detail in section \ref{sec:pbs-data-collection}.
+  \item \texttt{nginx/} -- reverse proxy configuration used as the entry point to route requests to the web application and the API.
+  \item \texttt{docker-compose.prod.yml} -- production deployment definition describing services, networking, and environment configuration.
+  \item \texttt{deploy.sh} -- deployment helper script that automates the deployment process.
+\end{itemize}
+
+At runtime, user requests are handled through the reverse proxy, which serves the frontend and forwards API calls to the backend. The frontend then communicates with the backend exclusively through the JSON API, while the collector runs independently to keep the monitoring data up to date.
+
 
 \section{API}
-\label{sec:data-collection-mechanism}
+\label{sec:impl-api}
+The backend API forms the integration layer between the monitored infrastructure and the web user interface. Its primary purpose is to provide a JSON API for the frontend while hiding the complexity of individual data sources. In PBSmon 2.0, the API aggregates monitoring data from the PBS environment, Perun and OpenStack, normalizes them into a consistent representation, and exposes them through JSON endpoints.
 
-TBD
+
+\newpage
+\subsubsection{API code structure}
+The API source code is organized into the following top-level directories:
+\begin{itemize}
+  \item \texttt{src/} -- source code of the API.
+  \begin{itemize}
+    \item \texttt{common/} -- shared utilities and cross-cutting concerns.
+    \item \texttt{config/} -- application and environment configuration. Eq. QSUB assembler configuration, pbs server list, etc.
+    \item \texttt{modules/} -- feature-oriented modules. Each module represent a domain entity and its related data. Each module consists of controllers and services. And therefore each module have its own routes and endpoints. There are list of modules:
+    \begin{itemize}
+      \item \texttt{accounting/} -- module for collecting accounting data from the accounting database.
+      \item \texttt{app/} 
+      \item \texttt{data-collection/} -- module responsible for collecting data from the infrastructure sources.
+      \item \texttt{groups/} -- module for retrieving user groups from the PBS server.
+      \item \texttt{infrastructure/} -- module for the infrastructure overview.
+      \item \texttt{jobs/} -- module for the jobs overview.
+      \item \texttt{projects/} -- module for the OpenStack projects overview.
+      \item \texttt{qsub/} -- module for the QSUB assembler.
+      \item \texttt{queues/} -- module for the queues overview.
+      \item \texttt{status/} -- module for the status overview.
+      \item \texttt{storage-spaces/} -- module for the storage spaces overview.
+      \item \texttt{users/} -- module for the users overview.
+    \end{itemize}
+  \end{itemize}
+  \item \texttt{data/} -- runtime collected data from the infrastructure sources.
+\end{itemize}
+
+
+\subsection{PBS data collection}
+\label{sec:pbs-data-collection}
+During the implementation, an important architectural decision concerned the placement of the PBS data collection logic: whether it should be part of the main API service or separated into an independent microservice (\texttt{pbs-collector}). The final design uses a dedicated collector because the PBS integration introduces specific and operationally demanding requirements (installation of the \texttt{libopenpbs} IFL library, a Debian-based runtime, and a properly configured Kerberos environment). In addition, prior experience with the legacy solution showed stability issues caused by memory leaks in the OpenPBS library, which could lead to process instability and, in the worst case, affect the entire server. By isolating the collector in a Docker container with explicitly defined resource limits, such failures are contained: once the limits are exceeded or the process becomes unstable, the container can be automatically restarted without impacting the API and the user interface.
+
+The \texttt{pbs-collector} microservice is therefore responsible for periodic retrieval of PBS data and exporting it into filesystem for later processing by the API. It collects core PBS entities (e.g., jobs, nodes, queues, and related objects) using the IFL interface of \texttt{libopenpbs} (as described in Section~\ref{subsubsec:batch-interface-library}), and it also gathers fairshare values for the users via the \texttt{list\_cache} command (as described in Section~\ref{subsubsec:fairshare-metrics}). This separation keeps the API focused on data delivery and presentation concerns, while the collector encapsulates the low-level PBS-specific integration and its operational constraints.
+
+
+\subsection{Perun data collection}
+\label{sec:perun-data-collection}
+Perun is not collected by PBSmon in the same way as PBS or OpenStack, because the required data are provided to PBSmon via a push mechanism external to the application. For this reason, PBSmon does not implement an active Perun client; instead, it only consumes prepared Perun exports.
+
+Within the API repository, Perun-related inputs are stored under \texttt{/api/data/perun/}. This directory contains static JSON files:
+
+\begin{itemize}
+  \item \texttt{pbsmon\_users.json} -- users data from Perun.
+  \item \texttt{pbsmon\_machines.json} -- machines data from Perun.
+\end{itemize}
+
+These files were described in more detail in section~\ref{subsec:entities-in-perun}. During development, these files were mocked to enable frontend and API development without relying on the external Perun export pipeline. In production, the application follows the same approach as the legacy PBSmon and loads these JSON files directly from the filesystem at runtime.
+
+
+\subsection{OpenStack data collection}
+TBD - using prometheus program - that was describe in some non existing section - these data stores only into memory and are not collected to the filesystem. 
+
 
 \subsection{Documentation}
-TBD - realized using OpenAPI, automatically generated from code, see appendix
+\label{sec:api-documentation}
+The API contract is described using an OpenAPI specification, which defines the available endpoints, their parameters, and response schemas. In addition to the static specification, the implementation exposes a Swagger UI that renders the OpenAPI document and provides an interactive interface for exploring and testing the API. This allows developers and administrators to call individual endpoints directly from the browser, inspect responses, and verify the expected behaviour without requiring external tools. The OpenAPI specification is included within the thesis archive.
+
 
 \section{Page views}
 \label{sec:page-views}
@@ -927,8 +1004,6 @@ TBD
 
 
 
-\chapter{Deployment}
-TBD
 
 
 \chapter*{Conclusion}
