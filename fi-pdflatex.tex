@@ -109,9 +109,11 @@ Currently, high-performance computing plays a key role in the implementation of 
 
 The PBSmon web service was developed to monitor these resources and provide an overview of their status. This application ensures the regular collection of metadata from computing nodes, queues, servers, and running jobs using native calls to PBS servers. It then transforms this data into a visual form accessible to users. Thanks to PBSmon, users can monitor the current system load, the status of individual jobs, and the availability of computing resources in real time.
 
-However, the original PBSmon application is monolithic and uses outdated libraries, such as Java library Stripes, which is no longer maintained. Growing demands for security, sustainability, and support for containerized deployment require a fundamental refactoring of the system.
+However, the original PBSmon application is monolithic and uses outdated libraries, such as Java library Stripes, which is no longer maintained. Growing demands for security, sustainability, and support for containerized deployment, and the need to cover both PBS and OpenStack require a fundamental refactoring and extension of the system.
 
-This thesis deals with the design and implementation of a new version of the PBSmon system, built on modern technologies: backend within the NestJS framework and frontend within the React framework. The goal is to create a modular, maintainable, and cloud-native architecture that preserves the functionality of the original solution while being ready for further development and adaptation to current technological standards.
+This thesis deals with the design and implementation of a new version of the PBSmon system, built on modern technologies: backend within the NestJS framework and frontend within the React framework. 
+
+The goal is to create a modular, maintainable, and cloud-native architecture that not only preserves the functionality of the original solution, but also extends it to support the OpenStack cloud and to be ready for further development and adaptation to current technological standards, including new features required by the assignment.
 
 
 \chapter{Analysis of the Existing Solution – PBSmon}
