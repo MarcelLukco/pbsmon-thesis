@@ -657,7 +657,7 @@ However, the analysis also identifies several significant limitations and areas 
 
 From a user experience perspective, the interface presents parameters in a form that mirrors the \texttt{qsub} command syntax, which helps users learn PBS commands but lacks supplementary explanations for individual fields. This makes it difficult for users to understand the purpose of less common parameters (e.g., \texttt{luna}, \texttt{umg}) or how their choices will affect job execution. The web interface uses \textbf{server-side rendering} and is not implemented as a standalone frontend application, limiting flexibility and modern user experience capabilities.
 
-The system also exhibits limitations in meeting current infrastructure demands. As GPU computing has gained prominence in MetaCentrum, the dashboard only displays total CPU usage statistics and does not include GPU resources or GPU time usage metrics. This reflects a common occurence with long-serving projects.
+The system also exhibits limitations in meeting current infrastructure demands. As GPU computing has gained prominence in MetaCentrum, the dashboard only displays total CPU usage statistics and does not include GPU resources or GPU time usage metrics.
 
 Another concern identified is a \textbf{potential GDPR violation}: the system displays information about all users that currently have active jobs and their jobs within MetaCentrum, which may not comply with data protection regulations regarding the visibility of personal computational activity to other users.
 
@@ -1036,8 +1036,8 @@ This section describes the implemented frontend page views and how they present 
 
 % For every page view, the following aspects are documented: its purpose and displayed data, the API endpoints it consumes, and the main interaction patterns provided to the user (sorting, filtering, paging, and error/loading states). This makes the connection between the backend modules and the user-facing interface explicit and shows how the collected data are transformed into actionable monitoring views.
 
-\paragraph{Layout}
-TBD - describe layout and navigation, the lists of page views 
+
+Layout and navigation are TBD - describe layout and navigation, the lists of page views 
 
 
 \subsection{Personal view}
