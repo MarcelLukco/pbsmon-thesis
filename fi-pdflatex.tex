@@ -1302,18 +1302,16 @@ The \emph{Group detail} page shows details of a selected UNIX group (name, GID) 
   \item \texttt{GET /groups/:name} -- returns group metadata and the list of members.
 \end{itemize}
 
-
 \chapter{Future improvements}
-TBD -
+\label{chap:future-improvements}
+The implemented solution focuses on reliable collection and presentation of PBS, OpenStack, and related infrastructure data. Since the system is designed in a modular way, it can be extended with additional collectors and UI views with minimal impact on existing parts. The following improvements would further increase the usefulness of the service for both end users and administrators:
+
 \begin{itemize}
-  \item Kubernetes extensions - showing state of kubernetes infrastructure 
-  \item Export to CSV - for analytical purposes - for admin users 
-  \item Showing personal disk quotas within user 
-  \item Option to submit jobs using the API - for users
+  \item \textbf{Kubernetes module.} Add a new collector and page views for monitoring the MetaCentrum Kubernetes service (cluster health, nodes, workloads, and basic resource usage).
+  \item \textbf{Administrative exports.} Provide CSV exports for selected views (e.g., jobs and nodes) to support analysis for admin users.
+  \item \textbf{User storage quotas.} Display personal disk quotas to complement compute usage information in the personal view and user detail view.
+  \item \textbf{PBS job submission API.} Add an option for submitting PBS jobs using the API.
 \end{itemize}
-
-
-
 
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
