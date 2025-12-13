@@ -761,13 +761,13 @@ A regular user must be able to use the application as a personal monitoring dash
   In these cases, the real user identity shall be shown.
 
   \item[FR-04 View OpenStack projects and VMs]  
-  The system shall allow a user to view all OpenStack projects associated with them and to list the virtual machines assigned to each of these projects, including basic metadata (such as name and creation date).
+  The system shall allow a user to view all OpenStack projects associated with them and to list the virtual machines assigned to each of these projects, including basic metadata (such as name and reserved resources).
 
   \item[FR-05 View queues]  
   The system shall provide an overview of all PBS queues, including their basic configuration and purpose, so that users can understand where their jobs are being scheduled.
 
   \item[FR-06 View infrastructure]  
-  The system shall provide a view of the MetaCentrum infrastructure based on Perun data, showing organisations, clusters and nodes, together with information about existing reservations on these resources. Only reservation information shall be displayed; actual usage of the resources is out of scope due to missing data.
+  The system shall provide a view of the MetaCentrum infrastructure based on Perun data, showing organisations, clusters and nodes, together with reserved resources on these nodes.
 
   \item[FR-07 View users within groups]  
   The system shall allow a user to see basic information about other users who belong to the same UNIX groups, using data from \texttt{/etc/group}.
@@ -790,13 +790,13 @@ A regular user must be able to use the application as a personal monitoring dash
 
 \subsection{Functional Requirements for Admins}
 
-Administrators require a complete, non-anonymised view of the system in order to support users and diagnose problems. In addition to FR-01~--~FR-11, the following requirements apply:
+Administrators require a complete, non-anonymised view of the system in order to support users and diagnose problems. In addition to FR-01~--~FR-12, the following requirements apply:
 
 \begin{description}
-  \item[FR-12 Full visibility]  
+  \item[FR-13 Full visibility]  
   The system shall allow an admin to see all available data for all users, jobs, queues, infrastructure elements, projects and VMs without anonymisation.
 
-  \item[FR-13 User impersonation]  
+  \item[FR-14 User impersonation]  
   The system shall allow an admin to impersonate a selected user, i.e., to temporarily view the application exactly as that user would see it (including all access restrictions and anonymisation). This functionality is intended solely for support and debugging.
 
 \end{description}
@@ -1147,115 +1147,160 @@ This page satisfies \textbf{FR-12 View storage spaces}.
 \end{itemize}
 
 \subsection{Cloud Projects}
-\label{subsec:projects}
-TBD
+\label{subsec:cloud-projects}
+
+The \emph{Cloud Projects} page lists OpenStack projects in the e-INFRA infrastructure. It supports searching, ordering, and pagination, and each row links to a project detail view. The table shows basic project state and aggregated reserved resources (e.g., VM count, vCPU, memory). In the administrator view, the list contains all projects.
+
+This page partially satisfies \textbf{FR-04 View OpenStack projects and VMs}: it displays project-level information and VM counts, while VM-level details are provided by the project detail page.
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image of the page
+  \item \texttt{GET /projects} -- returns the list of OpenStack projects (including aggregated resource information used in the table).
 \end{itemize}
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/cloud-projects.png}
+  \caption{Cloud Projects page (administrator view) listing OpenStack projects with aggregated reserved resources.}
+  \label{fig:ui-cloud-projects}
+\end{figure}
+
+
 \subsubsection{Project detail view}
-TBD
+
+\label{subsec:project-detail}
+
+The \emph{Project detail} page shows detailed information for a single OpenStack project: basic metadata (name, ID, status, description), aggregated reserved resources, the list of project VMs, and the list of associated users. It completes \textbf{FR-04 View OpenStack projects and VMs} by providing VM-level information.
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image??
+  \item \texttt{GET /projects/:id} -- returns project metadata together with VM and members lists.
 \end{itemize}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/cloud-project-detail.png}
+  \caption{Project detail page showing project metadata, VMs, and users.}
+  \label{fig:ui-project-detail}
+\end{figure}
 
 
 \subsection{Jobs Queues}
-\label{subsec:queues}
-TBD
+\label{subsec:jobs-queues}
+
+The \emph{Jobs Queues} page lists PBS queues and their current state. It satisfies \textbf{FR-05 View queues}. Queues are displayed hierarchically (e.g., route queues and their execution queues) and include key properties such as priority, time limits, and job statistics (queued, running, done, total). Queues the current user cannot submit to are marked with a lock icon (red background). As mentioned in the \ref{subsubsec:reservations} section, the reservation is an entity within the PBS, which always creates, the associated queue. This queue are distinguished by a dedicated icon of calendar before the queue name. The page, also implement ordering functionality.
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image of the page
-\end{itemize}
-\subsubsection{Queue detail view}
-TBD
-\begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image??
+  \item \texttt{GET /pbs/queues} - returns the list of queues in a hierarchical structure.
 \end{itemize}
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/jobs-queue-list.png}
+  \caption{Jobs Queues page (user view) showing hierarchical queue list, access restrictions, and reservation queues.}
+  \label{fig:ui-jobs-queues}
+\end{figure}
+
+\subsubsection{Queue detail view}
+The \emph{Queue detail} page provides details for a selected PBS queue. It shows basic properties (name, type, priority, maximum walltime) and the parent queue. A statistics panel summarizes queued/running/done counts. The lower part contains tabs with queue-related lists, primarily jobs associated with the queue (status, owner, machine, reserved resources), and additional tabs for related machines and system information. If a queue were created by reservation, it shows detail information about reservation. This page satisfies \textbf{FR-11 Detail pages}.
+
+
+\paragraph{Consumed API endpoint.}
+\begin{itemize}
+  \item \texttt{GET /pbs/queues/:id} - details information about queue
+  \item \texttt{GET /pbs/jobs} - list of jobs associated with the queue
+  \item \texttt{GET /infrastructure} - list of infrastructure associated with the queue
+\end{itemize}
+
+\newpage
 \subsection{Jobs}
 \label{subsec:jobs}
-TBD
+
+The \emph{Jobs} page lists PBS jobs in a table view with search, ordering, and pagination. It provides three tabs: \emph{My Jobs} (jobs of the current user), \emph{All Jobs} (global view), and \emph{Waiting Jobs}. Each row shows job state, identifier, name, owner, assigned machine, and reserved resources (CPU/GPU/RAM) including basic utilization indicators.The waiting jobs in addition show information about a reason of waiting of the job.
+
+The view satisfies \textbf{FR-02 View own jobs} and \textbf{FR-03 View global jobs with anonymisation} by showing the user’s jobs in full detail while anonymizing user-identifying fields in the global listing. 
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image of the page
+  \item \texttt{GET /pbs/jobs} - endpoints used for all three tabs (My Jobs, All Jobs, Waiting Jobs).
 \end{itemize}
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/jobs-list.png}
+  \caption{Jobs page (All Jobs tab) showing global job listing with anonymized user information.}
+  \label{fig:ui-jobs}
+\end{figure}
+
 \subsubsection{Job detail view}
-TBD
+\label{subsec:job-detail}
+
+The \emph{Job detail} page provides a complete overview of a selected PBS job. It includes an optional \emph{Messages} section with warnings derived from resource usage (e.g., low CPU/GPU/memory utilization compared to the requested resources). The \emph{Basic Information} section shows identifiers and placement (job ID, name, state, owner, queue, server, assigned node) and the job comment. \emph{Timestamps} summarize key times (created, started, eligible, last state change). The \emph{Resources} section shows the requested resources string, reserved resources (CPU, GPU, memory, walltime), and current usage indicators (CPU time used, GPU usage, memory used, runtime). Finally, \emph{Allocated Resources} lists the concrete allocation (machine and per-resource amounts), followed by a \emph{System Information} table with additional PBS attributes.
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image??
+  \item \texttt{GET /pbs/jobs/:id} -- returns detailed job metadata, resource requests/reservations, usage, and additional PBS attributes rendered on the page.
 \end{itemize}
 
 \subsection{Users}
 \label{subsec:users}
+The \emph{Users} page provides a paginated table of users with search and ordering. It shows username/nickname, fairshare value, job counters (queued/running/done/total), and aggregated resource usage; in the administrator view it also includes an \emph{Impersonate} action.
 
-TBD
+This view satisfies \textbf{FR-09 View fairshare information}, \textbf{FR-13 Full visibility}, \textbf{FR-14 User impersonation}, and supports \textbf{FR-07 View users within groups} as an entry point for user--group navigation.
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image??
+  \item \texttt{GET /users} -- returns a paginated user list and supports server-side search and ordering via query parameters.
 \end{itemize}
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/users-list-admin.png}
+  \caption{Users page (administrator view) with pagination, search, ordering, and impersonation action. Sensitive identifiers are anonymized manually.}
+  \label{fig:ui-users}
+\end{figure}
+
+
+\newpage
 \subsubsection{User detail view}
-TBD
+\label{subsec:user-detail}
+The \emph{User detail} page aggregates identity and usage information for a selected user. It shows basic identity data (username, full name, organization, membership expiration), fairshare per server, and accounting summaries (e.g., total jobs, total CPU time, yearly breakdown). The lower part contains tabs with the user’s current jobs and jobs queues available for the user.
+
+\paragraph{Consumed API endpoints.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image??
+  \item \texttt{GET /users/:id} -- user identity and profile metadata.
+  \item \texttt{GET /accounting/users/:username} -- aggregated historical jobs statistics and yearly breakdowns.
+  \item \texttt{GET /pbs/jobs} -- jobs filtered for the selected user.
+  \item \texttt{GET /pbs/queues} -- queues available for the selected user.
 \end{itemize}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/user-detail.png}
+  \caption{User detail page with identity data, fairshare, accounting summary, and user job list.}
+  \label{fig:ui-user-detail}
+\end{figure}
+
 
 \subsection{Users groups}
 \label{subsec:groups}
-TBD
+The \emph{Groups} page lists UNIX groups with their name, GID, and member count. Regular users see only groups they belong to, while administrators see all groups. This view satisfies \textbf{FR-08 View own group membership}.
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
+  \item \texttt{GET /groups} -- returns the list of groups (name, GID, member count).
 \end{itemize}
 
 \subsubsection{Group detail view}
-TBD
+\label{subsubsec:group-detail}
+
+The \emph{Group detail} page shows details of a selected UNIX group (name, GID) and its member list (nickname and optional full name from Perun). Visibility follows the same rule as the list view: users can access only groups they are members of, while administrators can access all groups.
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
+  \item \texttt{GET /groups/:name} -- returns group metadata and the list of members.
 \end{itemize}
-
-
-\section{Comparison with the legacy solution}
-\label{sec:comparison-with-the-legacy-solution}
-TBD - compare the new solution with the legacy solution in terms of features, performance, scalability, maintainability, etc. 
-
-IF is not too long - just move to conclusion
 
 
 \chapter{Future improvements}
