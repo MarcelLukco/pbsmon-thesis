@@ -783,6 +783,9 @@ A regular user must be able to use the application as a personal monitoring dash
 
   \item[FR-11 Detail pages]  
   For all major entities (job, node, queue, project, VM, reservation, user), the system shall offer detail pages accessible from overview tables, with information limited according to the user's role and the anonymisation rules described above.
+
+  \item[FR-12 View storage spaces]  
+  The system shall provide a view of the shared storage spaces, showing their total capacity, used capacity and free capacity. 
 \end{description}
 
 \subsection{Functional Requirements for Admins}
@@ -1119,24 +1122,28 @@ This page satisfies \textbf{FR-06 View infrastructure}.
 
 
 \subsubsection{Node detail view}
-TBD
+\label{subsec:machine-detail}
+
+The \emph{Machine detail} view provides a single-node overview: identification (node, cluster, owner), current state, reserved resources (CPU, RAM), and available scratch space. It also aggregates node-related data into tabs, including currently active jobs, available queues for the node, basic system information, and operational restrictions/outage history. The goal is to inspect one node in context without navigating across multiple list pages.
+
+\paragraph{Consumed API endpoints.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image??
+  \item \texttt{GET /infrastructure/machines/:nodeName} -- returns node metadata (name, cluster, owner), current state and reserved resources 
+  \item \texttt{GET /pbs/jobs} -- provides PBS jobs filtered for the selected node and displayed in the \emph{Tasks} tab.
+  \item \texttt{GET /pbs/queues} -- provides queue definitions relevant to the selected node and displayed in the \emph{Queues} tab.
+  \item \texttt{GET /accounting/nodes/:nodeName/outages} -- returns the outage/availability history for the node, rendered in the \emph{Operational Restrictions} tab.
 \end{itemize}
+
 
 \subsection{Storage spaces}
 \label{subsec:storage-spaces}
-TBD
+
+The \emph{Storage Spaces} page provides an overview of shared storage and its current free capacity. This information is useful for both users and administrators, because these disk arrays are typically used for persistent data (eq. for storing job outputs). User quota information is not shown in the current implementation; showing personal quotas was not part of the old PBSmon and is left as a potential future improvement.
+This page satisfies \textbf{FR-12 View storage spaces}.
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image of the page
+  \item \texttt{GET /storage-spaces} -- returns a list of storage spaces with total/used/free capacity (also aggregated totals).
 \end{itemize}
 
 \subsection{Cloud Projects}
