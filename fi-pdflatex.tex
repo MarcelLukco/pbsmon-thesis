@@ -118,7 +118,7 @@ The goal is to create a modular, maintainable, and cloud-native architecture tha
 
 \chapter{Analysis of the Existing Solution – PBSMon}
 \label{chap:analysis}
-The PBSMon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System), the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, jobs, and user activities within the entire MetaCentrum infrastructure.
+The PBSMon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System), the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, jobs, and user activities within the entire MetaCenter infrastructure.
 
 The web interface is used to visualize data from the PBS, Perun, and OpenStack systems. The information displayed includes a personal view of jobs, available computing resources, an overview of computing machines and their utilization, a list of users, and other statistics. Among other things, the following data is collected:
 
@@ -497,11 +497,11 @@ Entities retrieved from Perun are two independent data domains — users and mac
 
 \subsubsection{Users}
 \label{subsubsec:users-perun}
-The user dataset contains information about all registered users in the MetaCentrum infrastructure, including their identifiers, names, organizational affiliations, and assigned virtual organizations. These data are used to enrich job statistics and to provide a link between computational activity and user identity.
+The user dataset contains information about all registered users in the MetaCenter infrastructure, including their identifiers, names, organizational affiliations, and assigned virtual organizations. These data are used to enrich job statistics and to provide a link between computational activity and user identity.
 
 \subsubsection{Machines}
 \label{subsubsec:machines-perun}
-In addition to management of users, Perun also collect information about physical computing resources of the MetaCentrum infrastructure.
+In addition to management of users, Perun also collect information about physical computing resources of the MetaCenter infrastructure.
 These data are then passed to PBSMon from Perun. Data are hierachically structured and grouped by Organization -> Cluster -> Computing Node.
 
 Each record is an institution that has at least one cluster. Cluster is a group of computing nodes that are owned by the same institution. Computing node is a physical machine that is part of the cluster.
@@ -517,7 +517,7 @@ Each computing node is described by the following metadata:
 \end{itemize}
 
 These data are neccessary to get additional information about the complete information about the computing node for the running PBS jobs.
-Additionally, these data independetly from PBS are important for knowing the complete information about the computing nodes for whole MetaCentrum infrastructure.
+Additionally, these data independetly from PBS are important for knowing the complete information about the computing nodes for whole MetaCenter infrastructure.
 
 
 \subsection{Data Collection Mechanism}
@@ -540,7 +540,7 @@ OpenStack is a cloud operating system that controls large pools of compute, stor
 
 Beyond standard infrastructure-as-a-service functionality, additional components provide orchestration, fault management and service management amongst other services to provide operators flexibility to customize their infrastructure and ensure high availability of user applications. \cite{openstack2025}
 
-Within Metacenter infrastructure, OpenStack is used to provide virtual machines to the users with specific needs that are not covered by the PBS environment. There are some computing nodes that are part of MetaCentrum infrastructure, but are reserved ad hoc for OpenStack. Within nodes returned by Perun mentioned in \ref{subsubsec:machines-perun} are also nodes that are used for OpenStack.
+Within Metacenter infrastructure, OpenStack is used to provide virtual machines to the users with specific needs that are not covered by the PBS environment. There are some computing nodes that are part of MetaCenter infrastructure, but are reserved ad hoc for OpenStack. Within nodes returned by Perun mentioned in \ref{subsubsec:machines-perun} are also nodes that are used for OpenStack.
 
 Current PBSMon implementation gets very limited information about OpenStack virtual machines for each cluster. For each cluster, there is a list of virtual machines with their reserved CPU, name and user ID.
 
@@ -571,7 +571,7 @@ The authentication flow follows the standard OIDC protocol, where users are redi
 
 \section{Web Layer and User Interface}
 \label{sec:web-layer-and-user-interface}
-The current PBSMon application is integrated as part of the MetaVO portal (\url{https://metavo.metacentrum.cz}), which serves as the main web interface for MetaCentrum services. Within MetaVO, PBSMon is encapsulated as a single subsection called "Current state" (see \ref{fig:pbsmon}). This section is available only to logged-in users who have been granted access to PBSMon through the authentication system described in section \ref{sec:authentication}.
+The current PBSMon application is integrated as part of the MetaVO portal (\url{https://metavo.metacentrum.cz}), which serves as the main web interface for MetaCenter services. Within MetaVO, PBSMon is encapsulated as a single subsection called "Current state" (see \ref{fig:pbsmon}). This section is available only to logged-in users who have been granted access to PBSMon through the authentication system described in section \ref{sec:authentication}.
 
 The "Current state" subsection consists of the following pages:
 
@@ -614,12 +614,12 @@ The Personal view also contains links to other pages within the system. One such
 
 The page also displays all jobs queues that are accessible by the user. While this information is useful, it is considered less relevant and it is not necessary to be included in the new dashboard.
 
-One limitation of the current implementation is that the dashboard only displays total CPU usage and does not include total GPU resources. This limitation stems from the fact that GPU usage was not a significant concern at the start of the old PBSMon development, but has since become increasingly important as GPU computing has gained prominence in the MetaCentrum infrastructure.
+One limitation of the current implementation is that the dashboard only displays total CPU usage and does not include total GPU resources. This limitation stems from the fact that GPU usage was not a significant concern at the start of the old PBSMon development, but has since become increasingly important as GPU computing has gained prominence in the MetaCenter infrastructure.
 
 
 \subsection{QSUB assembler}
 \label{subsec:qsub-assembler}
-The QSUB assembler is one of the most important features of the PBSMon web interface, designed to assist users in submitting jobs to the MetaCentrum infrastructure. The \texttt{qsub} command is a CLI (Command Line Interface) command that allows users to submit jobs to the PBS system. This page provides a form-based interface for configuring job submission parameters.
+The QSUB assembler is one of the most important features of the PBSMon web interface, designed to assist users in submitting jobs to the MetaCenter infrastructure. The \texttt{qsub} command is a CLI (Command Line Interface) command that allows users to submit jobs to the PBS system. This page provides a form-based interface for configuring job submission parameters.
 
 \begin{figure}[h]
   \centering
@@ -628,7 +628,7 @@ The QSUB assembler is one of the most important features of the PBSMon web inter
   \label{fig:qsub-assembler}
 \end{figure}
 
-The QSUB assembler page presents users with an extensive form containing numerous parameters that can be set for job submission, such as resource requirements (CPU flags, memory, scratch space, architecture), queue selection, walltime, and other MetaCentrum-specific options. 
+The QSUB assembler page presents users with an extensive form containing numerous parameters that can be set for job submission, such as resource requirements (CPU flags, memory, scratch space, architecture), queue selection, walltime, and other MetaCenter-specific options. 
 
 The current user interface presents parameters in a form equivalent to their syntax in the \texttt{qsub} command, which has the advantage that users gradually learn the \texttt{qsub} command syntax. However, the interface lacks supplementary explanations for individual fields, and therefore it is not always clear what the purpose of some less known or specific parameters is (e.g., \texttt{luna}, \texttt{umg}). The UI contains names directly according to PBS attributes, but without context or brief help, it can be difficult for users to understand what exactly these choices represent or how they will affect job execution.
 
@@ -639,7 +639,7 @@ After configuring the desired parameters, the page automatically generates a com
   \item Inserted as a comment directive in a PBS job script (e.g., \texttt{\#PBS -l ...}) for later execution
 \end{itemize}
 
-Upon confirmation (submit), the page performs a query against the available MetaCentrum infrastructure to determine job feasibility. The results are presented in two key overviews:
+Upon confirmation (submit), the page performs a query against the available MetaCenter infrastructure to determine job feasibility. The results are presented in two key overviews:
 
 \begin{itemize}
   \item \textbf{Number of nodes meeting the requirements}: This shows the total count of nodes that are compatible with the specified parameters (e.g., nodes matching the CPU flags, memory requirements, scratch space, architecture, and other constraints)
@@ -651,15 +651,15 @@ Following these summary statistics, the page displays a detailed list of all nod
 \section{Summary of the Analysis}
 \label{sec:summary-of-analysis}
 
-The analysis of the existing PBSMon solution reveals a system that has successfully served its purpose of monitoring and visualizing MetaCentrum infrastructure data. The application effectively integrates data from multiple sources (PBS, Perun, and OpenStack) and provides users with  views of computational resources, jobs, and system status. Key strengths include the QSUB assembler feature, which assists users in constructing job submission commands, and the successful integration with Perun's authentication system.
+The analysis of the existing PBSMon solution reveals a system that has successfully served its purpose of monitoring and visualizing MetaCenter infrastructure data. The application effectively integrates data from multiple sources (PBS, Perun, and OpenStack) and provides users with  views of computational resources, jobs, and system status. Key strengths include the QSUB assembler feature, which assists users in constructing job submission commands, and the successful integration with Perun's authentication system.
 
 However, the analysis also identifies several significant limitations and areas for improvement. The system suffers from a \textbf{monolithic architecture} that tightly couples all components, making it difficult to maintain, extend, or deploy in modern containerized environments. The absence of dockerization further complicates deployment and scaling. The application relies on \textbf{outdated libraries}, most notably the Java library Stripes, which is no longer maintained, creating security and sustainability concerns.
 
 From a user experience perspective, the interface presents parameters in a form that mirrors the \texttt{qsub} command syntax, which helps users learn PBS commands but lacks supplementary explanations for individual fields. This makes it difficult for users to understand the purpose of less common parameters (e.g., \texttt{luna}, \texttt{umg}) or how their choices will affect job execution. The web interface uses \textbf{server-side rendering} and is not implemented as a standalone frontend application, limiting flexibility and modern user experience capabilities.
 
-The system also exhibits limitations in meeting current infrastructure demands. As GPU computing has gained prominence in MetaCentrum, the dashboard only displays total CPU usage statistics and does not include GPU resources or GPU time usage metrics.
+The system also exhibits limitations in meeting current infrastructure demands. As GPU computing has gained prominence in MetaCenter, the dashboard only displays total CPU usage statistics and does not include GPU resources or GPU time usage metrics.
 
-Another concern identified is a \textbf{potential GDPR violation}: the system displays information about all users that currently have active jobs and their jobs within MetaCentrum, which may not comply with data protection regulations regarding the visibility of personal computational activity to other users.
+Another concern identified is a \textbf{potential GDPR violation}: the system displays information about all users that currently have active jobs and their jobs within MetaCenter, which may not comply with data protection regulations regarding the visibility of personal computational activity to other users.
 
 In summary, while PBSMon has been functional and valuable, its monolithic architecture, outdated technology stack, lack of containerization support, suboptimal user experience, incomplete feature coverage for modern computing needs, and potential privacy compliance issues necessitate a fundamental redesign and modernization of the system.
 
@@ -670,14 +670,14 @@ In summary, while PBSMon has been functional and valuable, its monolithic archit
 This chapter summarizes selected applications and technologies related to the operation and future evolution of the MetaCenter computing infrastructure, as well as monitoring and user-facing access patterns relevant to this thesis. Besides the PBS-based grid environment, MetaCenter also provides web-based user portals, project and allocation tooling, metrics-based monitoring stacks, and container platforms. These components form an ecosystem in which the modernized PBSMon solution is expected to operate and where future integrations may be considered.
 
 \section{Open OnDemand}
-Open OnDemand is a web-based portal designed to provide end users with interactive access to computing resources directly from a web browser \cite{Hudak2018OpenOnDemand}. In MetaCenter, the OnDemand instance enables users to work with files through a graphical file manager, run interactive applications, and create or modify batch jobs using a GUI-oriented workflow \cite{MetacentrumOnDemandDocs}.
+Open OnDemand is a web-based portal designed to provide end users with interactive access to computing resources directly from a web browser \cite{Hudak2018OpenOnDemand}. In MetaCenter, the OnDemand instance enables users to work with files through a graphical file manager, run interactive applications, and create or modify batch jobs using a GUI-oriented workflow \cite{MetacenterOnDemandDocs}.
 
-A key benefit of OnDemand is the ability to start interactive workloads (e.g., desktop sessions or specialized applications) without requiring local software installation, which reduces the entry barrier for less experienced users and accelerates experimentation \cite{MetacentrumOnDemandDocs}. In addition, OnDemand provides browser-based shell access to selected frontends, effectively allowing users to open a terminal session in the browser and submit jobs using standard cluster tooling when needed \cite{MetacentrumOnDemandDocs}.
+A key benefit of OnDemand is the ability to start interactive workloads (e.g., desktop sessions or specialized applications) without requiring local software installation, which reduces the entry barrier for less experienced users and accelerates experimentation \cite{MetacenterOnDemandDocs}. In addition, OnDemand provides browser-based shell access to selected frontends, effectively allowing users to open a terminal session in the browser and submit jobs using standard cluster tooling when needed \cite{MetacenterOnDemandDocs}.
 
-From the perspective of monitoring, OnDemand primarily targets user interaction and job submission. It intentionally presents a simplified view tailored to the logged-in user workflow (files, sessions, job composer) and does not aim to replace an operator-oriented monitoring tool that exposes detailed, cluster-wide state and relationships between PBS entities (nodes, queues, scheduling policies, historical trends). Furthermore, authentication is performed using the user's academic identity, which limits administrative impersonation-style workflows and cross-user views compared to dedicated monitoring or administration tooling \cite{MetacentrumOnDemandDocs,Hudak2018OpenOnDemand}.
+From the perspective of monitoring, OnDemand primarily targets user interaction and job submission. It intentionally presents a simplified view tailored to the logged-in user workflow (files, sessions, job composer) and does not aim to replace an operator-oriented monitoring tool that exposes detailed, cluster-wide state and relationships between PBS entities (nodes, queues, scheduling policies, historical trends). Furthermore, authentication is performed using the user's academic identity, which limits administrative impersonation-style workflows and cross-user views compared to dedicated monitoring or administration tooling \cite{MetacenterOnDemandDocs,Hudak2018OpenOnDemand}.
 
 \section{Zeus}
-Zeus is a CESNET web application developed for MetaCentrum to support project and resource allocation workflows for both PBS-managed compute resources and cloud resources. The system focuses on capturing and managing project-related processes, enabling users to request quotas, and allowing administrators to allocate requested resources. An important part of the solution is integration with the Perun identity and access management system, including propagation of project information towards computing resources \cite{Valalsky2025thesis}.
+Zeus is a CESNET web application developed for MetaCenter to support project and resource allocation workflows for both PBS-managed compute resources and cloud resources. The system focuses on capturing and managing project-related processes, enabling users to request quotas, and allowing administrators to allocate requested resources. An important part of the solution is integration with the Perun identity and access management system, including propagation of project information towards computing resources \cite{Valalsky2025thesis}.
 
 Compared to PBSMon, Zeus is not a monitoring tool; it addresses a different layer of the infrastructure lifecycle (project management and allocation rather than operational state visualization). Nevertheless, Zeus is relevant when considering the long-term evolution of the monitoring ecosystem: allocation and project metadata can become an important enrichment signal for monitoring dashboards (e.g., mapping jobs and users to projects, quotas, or allocation decisions). Therefore, Zeus is considered a potential integration point for future PBSMon extensions \cite{Valalsky2025thesis}.
 
@@ -690,12 +690,12 @@ In this thesis, Prometheus is therefore considered primarily as a complementary 
 \subsection{Thanos}
 Thanos is a set of components that extends Prometheus deployments with features such as long-term storage in object storage, high availability, and a global query view across multiple Prometheus instances \cite{ThanosWebsite,ThanosGitHub}. In practice, Thanos addresses typical Prometheus limitations related to retention, high-availability operation, and querying across multiple Prometheus servers \cite{ThanosWebsite,ThanosGitHub}.
 
-This thesis does not adopt Thanos, because the primary goal is to provide a reliable view of the current operational state of the MetaCentrum PBS-based grid environment, rather than to design a long-term metrics retention and global query layer. Nevertheless, Thanos remains relevant as a future consideration if PBSMon (or surrounding infrastructure) evolves towards stronger historical analytics.
+This thesis does not adopt Thanos, because the primary goal is to provide a reliable view of the current operational state of the MetaCenter PBS-based grid environment, rather than to design a long-term metrics retention and global query layer. Nevertheless, Thanos remains relevant as a future consideration if PBSMon (or surrounding infrastructure) evolves towards stronger historical analytics.
 
 \section{Kubernetes}
 Kubernetes is an open-source container orchestration platform for automating deployment, scaling, and management of containerized applications \cite{KubernetesDocs,Burns2022Kubernetes}. It provides a declarative model for running workloads, service discovery, and operational automation that is now standard in cloud-native environments \cite{KubernetesDocs,Burns2022Kubernetes}.
 
-MetaCentrum (within e-INFRA CZ) also operates a container platform based on Kubernetes, including a Rancher-based distribution and related user-facing tooling \cite{EinfraHPCKubernetes}. This is relevant for PBSMon because Kubernetes-based services are part of the broader infrastructure portfolio and strengthen the requirement for modularity and extensibility of monitoring solutions.
+MetaCenter (within e-INFRA CZ) also operates a container platform based on Kubernetes, including a Rancher-based distribution and related user-facing tooling \cite{EinfraHPCKubernetes}. This is relevant for PBSMon because Kubernetes-based services are part of the broader infrastructure portfolio and strengthen the requirement for modularity and extensibility of monitoring solutions.
 
 \chapter{Design of the New Solution}
 \label{chap:design}
@@ -710,7 +710,7 @@ The remainder of this chapter is structured as follows. Section~\ref{sec:functio
 \section{Functional Requirements}
 \label{sec:functional-requirements}
 
-The goal of the new solution is to provide a read-only monitoring application that aggregates information from multiple data sources used in MetaCentrum. The system does not modify the state of the underlying infrastructure; instead, it offers a unified user interface for viewing job information, infrastructure topology and cloud resources. Access to this information is controlled by a simple role model with two roles: \emph{user} and \emph{admin}. An administrator can perform all actions available to a regular user, plus additional operations related to support and diagnostics.
+The goal of the new solution is to provide a read-only monitoring application that aggregates information from multiple data sources used in MetaCenter. The system does not modify the state of the underlying infrastructure; instead, it offers a unified user interface for viewing job information, infrastructure topology and cloud resources. Access to this information is controlled by a simple role model with two roles: \emph{user} and \emph{admin}. An administrator can perform all actions available to a regular user, plus additional operations related to support and diagnostics.
 
 \subsection{Domain Entities and Data Sources}
 \label{sec:domain-entities}
@@ -719,7 +719,7 @@ The new solution reuses most of the domain model of the original PBSMon applicat
 
 \subsubsection*{PBS and Perun (recap)}
 
-From PBS, the application uses primarily jobs, nodes, queues, reservations and fairshare entries, together with UNIX groups obtained from the \texttt{/etc/group} file to determine relationships between users. From Perun, it reuses the list of users with richer metadata (full name, organisation, \dots) and the description of the MetaCentrum infrastructure, including organisations, clusters and their nodes. For a detailed description of these entities, see Chapter~\ref{chap:analysis}.
+From PBS, the application uses primarily jobs, nodes, queues, reservations and fairshare entries, together with UNIX groups obtained from the \texttt{/etc/group} file to determine relationships between users. From Perun, it reuses the list of users with richer metadata (full name, organisation, \dots) and the description of the MetaCenter infrastructure, including organisations, clusters and their nodes. For a detailed description of these entities, see Chapter~\ref{chap:analysis}.
 
 \subsubsection*{OpenStack entities}
 
@@ -736,7 +736,7 @@ These OpenStack entities are used in the functional requirements below, in parti
 The system defines two roles:
 
 \begin{itemize}
-  \item \textbf{User} -- a regular MetaCentrum user. A user has access primarily to information related to their own activity and to entities connected to their UNIX groups. Global information is either anonymised or aggregated where necessary.
+  \item \textbf{User} -- a regular MetaCenter user. A user has access primarily to information related to their own activity and to entities connected to their UNIX groups. Global information is either anonymised or aggregated where necessary.
   \item \textbf{Admin} -- an administrative user. An admin can see complete, non-anonymised information across all users and resources and can impersonate other users for troubleshooting and support. An admin has all capabilities of a regular user.
 \end{itemize}
 
@@ -767,7 +767,7 @@ A regular user must be able to use the application as a personal monitoring dash
   The system shall provide an overview of all PBS queues, including their basic configuration and purpose, so that users can understand where their jobs are being scheduled.
 
   \item[FR-06 View infrastructure]  
-  The system shall provide a view of the MetaCentrum infrastructure based on Perun data, showing organisations, clusters and nodes, together with reserved resources on these nodes.
+  The system shall provide a view of the MetaCenter infrastructure based on Perun data, showing organisations, clusters and nodes, together with reserved resources on these nodes.
 
   \item[FR-07 View users within groups]  
   The system shall allow a user to see basic information about other users who belong to the same UNIX groups, using data from \texttt{/etc/group}.
@@ -811,7 +811,7 @@ A key part of the new solution is the redesign of the graphical user interface (
 
 At the same time, the current users are already familiar with the existing interface and rely on established interaction patterns. A radical change to the layout or navigation could therefore have a negative impact on productivity and would likely be met with resistance. The GUI design of the new solution therefore aims for an evolutionary rather than revolutionary change: it introduces a more intuitive structure and visual hierarchy, but preserves similar navigation concepts and overall information density so that experienced users can adapt quickly.
 
-Another important requirement was to keep the visual identity of the MetaCentrum computing grid\footnote{\url{https://www.metacentrum.cz/en/}}. The brand colour is a distinctive shade of orange, which is already used in existing tools and documentation and therefore forms an important part of the user experience. However, large orange areas on the screen can be visually tiring and, in extreme cases, reduce readability. For this reason, the new interface is based on a dark grey theme that serves as a neutral background, while orange is used as an accent colour for interactive elements such as primary buttons, active navigation items and important status indicators. This approach preserves the recognisable MetaCentrum brand while improving visual comfort during long-term use.
+Another important requirement was to keep the visual identity of the MetaCenter computing grid\footnote{\url{https://www.metacentrum.cz/en/}}. The brand colour is a distinctive shade of orange, which is already used in existing tools and documentation and therefore forms an important part of the user experience. However, large orange areas on the screen can be visually tiring and, in extreme cases, reduce readability. For this reason, the new interface is based on a dark grey theme that serves as a neutral background, while orange is used as an accent colour for interactive elements such as primary buttons, active navigation items and important status indicators. This approach preserves the recognisable MetaCenter brand while improving visual comfort during long-term use.
 
 For the design process, the Figma tool was used to create the visual specification of the interface. In Figma, a set of basic building blocks was first defined as reusable components, ensuring consistency across the entire application and simplifying future modifications. On top of these components, the main layout was designed, including a sidebar menu for navigation between the key parts of the application and a content area for displaying overviews and detail views. The resulting design of the new personal view is illustrated in Figure~\ref{fig:new-pbsMon-gui-design} and serves both as a communication tool with stakeholders and as a reference for the implementation of the frontend.
 
@@ -941,7 +941,7 @@ In this project, Docker is used to containerise the backend API, the frontend an
 \chapter{Implementation}
 \label{chap:implementation}
 
-This chapter describes the implementation of the new PBSMon solution. The main objective was not only to migrate the legacy monolithic system to a modern technology stack, but also to deliver a maintainable and extensible codebase that supports the current scope of MetaCentrum infrastructure. In particular, the implementation covers monitoring data obtained from the PBS scheduling environment and extends the original functionality by integrating OpenStack as an additional data source.
+This chapter describes the implementation of the new PBSMon solution. The main objective was not only to migrate the legacy monolithic system to a modern technology stack, but also to deliver a maintainable and extensible codebase that supports the current scope of MetaCenter infrastructure. In particular, the implementation covers monitoring data obtained from the PBS scheduling environment and extends the original functionality by integrating OpenStack as an additional data source.
 
 The resulting system is implemented as a separated backend and frontend that communicate via a JSON API. This separation enables clearer responsibility boundaries, simplifies testing, and allows both parts to evolve independently. At the same time, the implementation keeps the core purpose of PBSMon intact: regularly collecting infrastructure metadata, normalizing it into a consistent representation, and presenting it to users in a readable form.
 
@@ -1105,7 +1105,7 @@ The view obtains data from two backend endpoints:
 \subsection{Machines}
 \label{subsec:machines}
 
-The \emph{Machines} page shows the MetaCentrum infrastructure in a single hierarchical view: \emph{organization} $\rightarrow$ \emph{cluster} $\rightarrow$ \emph{node} (Figure~\ref{fig:ui-machines}). It provides overall totals (organizations, clusters, nodes, CPU, GPU) and displays node cards with current state (e.g., occupied, partially free, maintenance) and per-node resource indicators. A right-side \emph{Quick Links} panel enables fast navigation between organizations. The content is identical for users and administrators; no anonymization is applied.
+The \emph{Machines} page shows the MetaCenter infrastructure in a single hierarchical view: \emph{organization} $\rightarrow$ \emph{cluster} $\rightarrow$ \emph{node} (Figure~\ref{fig:ui-machines}). It provides overall totals (organizations, clusters, nodes, CPU, GPU) and displays node cards with current state (e.g., occupied, partially free, maintenance) and per-node resource indicators. A right-side \emph{Quick Links} panel enables fast navigation between organizations. The content is identical for users and administrators; no anonymization is applied.
 This page satisfies \textbf{FR-06 View infrastructure}. 
 
 \paragraph{Consumed API endpoint.}
@@ -1307,7 +1307,7 @@ The \emph{Group detail} page shows details of a selected UNIX group (name, GID) 
 The implemented solution focuses on reliable collection and presentation of PBS, OpenStack, and related infrastructure data. Since the system is designed in a modular way, it can be extended with additional collectors and UI views with minimal impact on existing parts. The following improvements would further increase the usefulness of the service for both end users and administrators:
 
 \begin{itemize}
-  \item \textbf{Kubernetes module.} Add a new collector and page views for monitoring the MetaCentrum Kubernetes service (cluster health, nodes, workloads, and basic resource usage).
+  \item \textbf{Kubernetes module.} Add a new collector and page views for monitoring the MetaCenter Kubernetes service (cluster health, nodes, workloads, and basic resource usage).
   \item \textbf{Administrative exports.} Provide CSV exports for selected views (e.g., jobs and nodes) to support analysis for admin users.
   \item \textbf{User storage quotas.} Display personal disk quotas to complement compute usage information in the personal view and user detail view.
   \item \textbf{PBS job submission API.} Add an option for submitting PBS jobs using the API.
