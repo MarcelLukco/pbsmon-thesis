@@ -107,18 +107,18 @@
 \addcontentsline{toc}{chapter}{Introduction}
 Currently, high-performance computing plays a key role in the implementation of research projects across a wide range of scientific disciplines. In the academic sector, it is therefore essential to ensure access to sufficient computing power to enable the implementation of demanding simulations, the processing of large data sets, and the effective analysis of results. National computing infrastructures, including CESNET, have been created for this purpose. This academic institution offers computing resources dedicated exclusively to research and academic purposes.
 
-The PBSmon web service was developed to monitor these resources and provide an overview of their status. This application ensures the regular collection of metadata from computing nodes, queues, servers, and running jobs using native calls to PBS servers. It then transforms this data into a visual form accessible to users. Thanks to PBSmon, users can monitor the current system load, the status of individual jobs, and the availability of computing resources in real time.
+The PBSMon web service was developed to monitor these resources and provide an overview of their status. This application ensures the regular collection of metadata from computing nodes, queues, servers, and running jobs using native calls to PBS servers. It then transforms this data into a visual form accessible to users. Thanks to PBSMon, users can monitor the current system load, the status of individual jobs, and the availability of computing resources in real time.
 
-However, the original PBSmon application is monolithic and uses outdated libraries, such as Java library Stripes, which is no longer maintained. Growing demands for security, sustainability, and support for containerized deployment, and the need to cover both PBS and OpenStack require a fundamental refactoring and extension of the system.
+However, the original PBSMon application is monolithic and uses outdated libraries, such as Java library Stripes, which is no longer maintained. Growing demands for security, sustainability, and support for containerized deployment, and the need to cover both PBS and OpenStack require a fundamental refactoring and extension of the system.
 
-This thesis deals with the design and implementation of a new version of the PBSmon system, built on modern technologies: backend within the NestJS framework and frontend within the React framework. 
+This thesis deals with the design and implementation of a new version of the PBSMon system, built on modern technologies: backend within the NestJS framework and frontend within the React framework. 
 
 The goal is to create a modular, maintainable, and cloud-native architecture that not only preserves the functionality of the original solution, but also extends it to support the OpenStack cloud and to be ready for further development and adaptation to current technological standards, including new features required by the assignment.
 
 
-\chapter{Analysis of the Existing Solution – PBSmon}
+\chapter{Analysis of the Existing Solution – PBSMon}
 \label{chap:analysis}
-The PBSmon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System), the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, jobs, and user activities within the entire MetaCentrum infrastructure.
+The PBSMon application serves as a central tool for collecting and visualizing data from various systems related to computing resource management. It automatically collects information from the PBS (Portable Batch System), the Perun identity management system, and virtual machines (OpenStack). It then processes this data and provides users with a comprehensive view of the current status of the infrastructure, jobs, and user activities within the entire MetaCentrum infrastructure.
 
 The web interface is used to visualize data from the PBS, Perun, and OpenStack systems. The information displayed includes a personal view of jobs, available computing resources, an overview of computing machines and their utilization, a list of users, and other statistics. Among other things, the following data is collected:
 
@@ -140,7 +140,7 @@ The existing solution is built as a monolithic Java application that collects da
 \newpage
 \subsection{Data collection environments}
 \label{subsec:data-collection-environments}
-PBSmon collects following data from the following environments:
+PBSMon collects following data from the following environments:
 \begin{itemize}
   \item PBS environment
   \begin{itemize}
@@ -167,12 +167,12 @@ The data obtained from various sources — such as compute clusters (PBS), cloud
 \subsection{Web Presentation}
 \label{subsec:web-presentation}
 
-The presentation of data is performed through server-side rendering of HTML pages. Only logged in users, that have approved access to PBSmon can access the web interface. The authorization is performed by third party system using OICD token, that will be described in detail in section \ref{sec:authentication}.
+The presentation of data is performed through server-side rendering of HTML pages. Only logged in users, that have approved access to PBSMon can access the web interface. The authorization is performed by third party system using OICD token, that will be described in detail in section \ref{sec:authentication}.
 
 These pages display detailed views of jobs, nodes, system states, and other information relevant to both users and administrators. As mentioned earlier, the web interface is strictly read-only and does not provide any functionality for data input or modification.
 The frontend is not implemented as a standalone application; it is an integral part of the monolithic Java system.
 
-One of the key features is so called \textbf{QSUB assembler}, which allows user to add required parameters for the job submission and PBSmon will notify the user about the nodes that fullfils the requirements. Among other, it produces a shell script that can be executed to submit the job to the PBS server with the required parameters
+One of the key features is so called \textbf{QSUB assembler}, which allows user to add required parameters for the job submission and PBSMon will notify the user about the nodes that fullfils the requirements. Among other, it produces a shell script that can be executed to submit the job to the PBS server with the required parameters
 
 All of this will be described in more detail in section \ref{sec:web-layer-and-user-interface}.
 
@@ -421,9 +421,9 @@ This library allows external applications and tools to communicate with the PBS 
 Thus, library represents a key component for implementing a tool that enables data collection and monitoring of jobs managed by the PBS server.
 
 
-Subsequently, current PBSmon implementation contains C code that, when invoked, retrieves information from the PBS server using the library functions and then stores this data into a file, which the Java application later processes and saves into the in-memory store (see Listing \ref{lst:pbs_connect_example}).
+Subsequently, current PBSMon implementation contains C code that, when invoked, retrieves information from the PBS server using the library functions and then stores this data into a file, which the Java application later processes and saves into the in-memory store (see Listing \ref{lst:pbs_connect_example}).
 
-This collection process is triggered whenever the user wants to display any PBSmon page and when the data in the memory cache is older than 60 seconds.
+This collection process is triggered whenever the user wants to display any PBSMon page and when the data in the memory cache is older than 60 seconds.
 
 Another important note is that collected data represents the current state of the PBS server. It does not include any historical data. \label{note:historical-data}
 
@@ -484,7 +484,7 @@ user, last\_modified, fairshare.
 \subsubsection{Group file collection}
 \label{subsubsec:group-file-collection}
 
-In addition to entities and caches, the shell script located on PBS server automatically pushes its /etc/group file. These files provide information about local UNIX groups and their members. Whenever time it has changed, the PBS server writes the updated version to the PBSmon server's filesystem under the following path: \textbf{/etc/pbsmon/group/<pbsServer>}.
+In addition to entities and caches, the shell script located on PBS server automatically pushes its /etc/group file. These files provide information about local UNIX groups and their members. Whenever time it has changed, the PBS server writes the updated version to the PBSMon server's filesystem under the following path: \textbf{/etc/pbsMon/group/<pbsServer>}.
 
 
 \newpage
@@ -502,7 +502,7 @@ The user dataset contains information about all registered users in the MetaCent
 \subsubsection{Machines}
 \label{subsubsec:machines-perun}
 In addition to management of users, Perun also collect information about physical computing resources of the MetaCentrum infrastructure.
-These data are then passed to PBSmon from Perun. Data are hierachically structured and grouped by Organization -> Cluster -> Computing Node.
+These data are then passed to PBSMon from Perun. Data are hierachically structured and grouped by Organization -> Cluster -> Computing Node.
 
 Each record is an institution that has at least one cluster. Cluster is a group of computing nodes that are owned by the same institution. Computing node is a physical machine that is part of the cluster.
 
@@ -523,7 +523,7 @@ Additionally, these data independetly from PBS are important for knowing the com
 \subsection{Data Collection Mechanism}
 \label{subsec:data-collection-mechanism-perun}
 
-The integration of the PBSmon system with Perun is designed using a PUSH model. Instead of direct access to the Perun database or invoking its API, Perun periodically generates JSON files containing all relevant information about users and computing resources. These files are then transferred via SSH directly to the PBSmon server, where they are stored in the filesystem, and subsequently loaded and processed by PBSmon. These files are stored in the filesystem as following:
+The integration of the PBSMon system with Perun is designed using a PUSH model. Instead of direct access to the Perun database or invoking its API, Perun periodically generates JSON files containing all relevant information about users and computing resources. These files are then transferred via SSH directly to the PBSMon server, where they are stored in the filesystem, and subsequently loaded and processed by PBSMon. These files are stored in the filesystem as following:
 
 \begin{itemize}
   \item \textbf{/etc/pbsmon/pbsmon\_users.json} 
@@ -531,7 +531,7 @@ The integration of the PBSmon system with Perun is designed using a PUSH model. 
 \end{itemize}
 
 \subsubsection{Change Detection and Synchronization}
-Currently, whenever user opens any page in PBSmon, the system checks if the files were modified since last load. If they were, the files are loaded and processed by PBSmon.
+Currently, whenever user opens any page in PBSMon, the system checks if the files were modified since last load. If they were, the files are loaded and processed by PBSMon.
 
 
 \newpage 
@@ -540,15 +540,15 @@ OpenStack is a cloud operating system that controls large pools of compute, stor
 
 Beyond standard infrastructure-as-a-service functionality, additional components provide orchestration, fault management and service management amongst other services to provide operators flexibility to customize their infrastructure and ensure high availability of user applications. \cite{openstack2025}
 
-Within Metacentrum infrastructure, OpenStack is used to provide virtual machines to the users with specific needs that are not covered by the PBS environment. There are some computing nodes that are part of MetaCentrum infrastructure, but are reserved ad hoc for OpenStack. Within nodes returned by Perun mentioned in \ref{subsubsec:machines-perun} are also nodes that are used for OpenStack.
+Within Metacenter infrastructure, OpenStack is used to provide virtual machines to the users with specific needs that are not covered by the PBS environment. There are some computing nodes that are part of MetaCentrum infrastructure, but are reserved ad hoc for OpenStack. Within nodes returned by Perun mentioned in \ref{subsubsec:machines-perun} are also nodes that are used for OpenStack.
 
-Current PBSmon implementation gets very limited information about OpenStack virtual machines for each cluster. For each cluster, there is a list of virtual machines with their reserved CPU, name and user ID.
+Current PBSMon implementation gets very limited information about OpenStack virtual machines for each cluster. For each cluster, there is a list of virtual machines with their reserved CPU, name and user ID.
 
  
 \subsection{Data Collection Mechanism}
 \label{subsec:data-collection-mechanism-openstack}
 
-The integration of the PBSmon system with OpenStack is designed using a PUSH model. Instead of direct access to the API, JSON files are transferred via SSH directly to the PBSmon server, where they are stored in the filesystem, and subsequently loaded and processed by PBSmon. For each cluster, there is a separate file with the list of virtual machines with their reserved CPU, name and user ID. 
+The integration of the PBSMon system with OpenStack is designed using a PUSH model. Instead of direct access to the API, JSON files are transferred via SSH directly to the PBSMon server, where they are stored in the filesystem, and subsequently loaded and processed by PBSMon. For each cluster, there is a separate file with the list of virtual machines with their reserved CPU, name and user ID. 
 
 An example of the response structure for the OpenStack cluster named "glados" is provided in Appendix \ref{app:openstack-response-example}.
 
@@ -557,28 +557,28 @@ An example of the response structure for the OpenStack cluster named "glados" is
 \section{Retrieval of historical data}
 \label{sec:collection-of-historical-data}
 
-As mentioned in section \ref{note:historical-data}, the data collected by PBSmon represents only the current state of the PBS infrastructure. To access historical information about completed jobs, their resource usage, and long-term statistics, a separate application is responsible for collecting and storing historical PBS data in a PostgreSQL database.
+As mentioned in section \ref{note:historical-data}, the data collected by PBSMon represents only the current state of the PBS infrastructure. To access historical information about completed jobs, their resource usage, and long-term statistics, a separate application is responsible for collecting and storing historical PBS data in a PostgreSQL database.
 
 This historical data collection system continuously records information about finished jobs, including their execution times, resource consumption, and user associations.
 
 \section{Authentication}
 \label{sec:authentication}
-The current PBSmon solution uses third-party authentication provided by Perun's e-INFRA system. Authentication is implemented using the OpenID Connect (OIDC) protocol, which allows users to authenticate through the centralized identity provider managed by Perun.  \cite{perun2025}
+The current PBSMon solution uses third-party authentication provided by Perun's e-INFRA system. Authentication is implemented using the OpenID Connect (OIDC) protocol, which allows users to authenticate through the centralized identity provider managed by Perun.  \cite{perun2025}
 
-This approach ensures that only authorized users with valid credentials from the Perun identity management system can access the PBSmon web interface.  \cite{perun2025}
+This approach ensures that only authorized users with valid credentials from the Perun identity management system can access the PBSMon web interface.  \cite{perun2025}
 
-The authentication flow follows the standard OIDC protocol, where users are redirected to the Proxy IdP for login, and upon successful authentication, an OIDC token is issued and used to grant access to the PBSmon application. \cite{perun2025}
+The authentication flow follows the standard OIDC protocol, where users are redirected to the Proxy IdP for login, and upon successful authentication, an OIDC token is issued and used to grant access to the PBSMon application. \cite{perun2025}
 
 \section{Web Layer and User Interface}
 \label{sec:web-layer-and-user-interface}
-The current PBSmon application is integrated as part of the MetaVO portal (\url{https://metavo.metacentrum.cz}), which serves as the main web interface for MetaCentrum services. Within MetaVO, PBSmon is encapsulated as a single subsection called "Current state" (see \ref{fig:pbsmon}). This section is available only to logged-in users who have been granted access to PBSmon through the authentication system described in section \ref{sec:authentication}.
+The current PBSMon application is integrated as part of the MetaVO portal (\url{https://metavo.metacentrum.cz}), which serves as the main web interface for MetaCentrum services. Within MetaVO, PBSMon is encapsulated as a single subsection called "Current state" (see \ref{fig:pbsmon}). This section is available only to logged-in users who have been granted access to PBSMon through the authentication system described in section \ref{sec:authentication}.
 
 The "Current state" subsection consists of the following pages:
 
 \begin{itemize}
   \item \textbf{Personal view} - A dashboard with information about the logged-in person, including their job statistics, jobs queues and quick access to other relevant pages
   \item \textbf{QSUB assembler} - A tool for assembling commands for job submission, described in detail in subsection \ref{subsec:qsub-assembler}
-  \item \textbf{Physical machines} - A list of Metacentrum grid infrastructure retrieven from Perun nodes with PBS mapping
+  \item \textbf{Physical machines} - A list of Metacenter grid infrastructure retrieven from Perun with PBS mapping
   \item \textbf{PBS node state} - A list of all PBS nodes and their current status. Without mapping to the Perun physical machines.
   \item \textbf{Virtual machines} - A list of all virtual machines (no longer relevant in the current infrastructure)
   \item \textbf{Jobs queues} - A list of queues and reservations
@@ -592,19 +592,19 @@ The "Current state" subsection consists of the following pages:
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.5\textwidth]{figures/pbsmon.png}
-  \caption{PBSmon layout}
+  \caption{PBSMon layout}
   \label{fig:pbsmon}
 \end{figure}
 
 \newpage
 \subsection{Personal view}
 \label{subsec:personal-view}
-The Personal view serves as the main dashboard for users, representing one of the most important and frequently used features of PBSmon. This view provides users with an overview of their job statistics and quick access to other relevant pages.
+The Personal view serves as the main dashboard for users, representing one of the most important and frequently used features of PBSMon. This view provides users with an overview of their job statistics and quick access to other relevant pages.
 
 \begin{figure}[h]
   \centering
   \includegraphics[width=0.5\textwidth]{figures/old-pbsmon-personal-view.png}
-  \caption{Personal view dashboard in the old PBSmon}
+  \caption{Personal view dashboard in the old PBSMon}
   \label{fig:old-pbsmon-personal-view}
 \end{figure}
 
@@ -614,12 +614,12 @@ The Personal view also contains links to other pages within the system. One such
 
 The page also displays all jobs queues that are accessible by the user. While this information is useful, it is considered less relevant and it is not necessary to be included in the new dashboard.
 
-One limitation of the current implementation is that the dashboard only displays total CPU usage and does not include total GPU resources. This limitation stems from the fact that GPU usage was not a significant concern at the start of the old PBSmon development, but has since become increasingly important as GPU computing has gained prominence in the MetaCentrum infrastructure.
+One limitation of the current implementation is that the dashboard only displays total CPU usage and does not include total GPU resources. This limitation stems from the fact that GPU usage was not a significant concern at the start of the old PBSMon development, but has since become increasingly important as GPU computing has gained prominence in the MetaCentrum infrastructure.
 
 
 \subsection{QSUB assembler}
 \label{subsec:qsub-assembler}
-The QSUB assembler is one of the most important features of the PBSmon web interface, designed to assist users in submitting jobs to the MetaCentrum infrastructure. The \texttt{qsub} command is a CLI (Command Line Interface) command that allows users to submit jobs to the PBS system. This page provides a form-based interface for configuring job submission parameters.
+The QSUB assembler is one of the most important features of the PBSMon web interface, designed to assist users in submitting jobs to the MetaCentrum infrastructure. The \texttt{qsub} command is a CLI (Command Line Interface) command that allows users to submit jobs to the PBS system. This page provides a form-based interface for configuring job submission parameters.
 
 \begin{figure}[h]
   \centering
@@ -651,7 +651,7 @@ Following these summary statistics, the page displays a detailed list of all nod
 \section{Summary of the Analysis}
 \label{sec:summary-of-analysis}
 
-The analysis of the existing PBSmon solution reveals a system that has successfully served its purpose of monitoring and visualizing MetaCentrum infrastructure data. The application effectively integrates data from multiple sources (PBS, Perun, and OpenStack) and provides users with  views of computational resources, jobs, and system status. Key strengths include the QSUB assembler feature, which assists users in constructing job submission commands, and the successful integration with Perun's authentication system.
+The analysis of the existing PBSMon solution reveals a system that has successfully served its purpose of monitoring and visualizing MetaCentrum infrastructure data. The application effectively integrates data from multiple sources (PBS, Perun, and OpenStack) and provides users with  views of computational resources, jobs, and system status. Key strengths include the QSUB assembler feature, which assists users in constructing job submission commands, and the successful integration with Perun's authentication system.
 
 However, the analysis also identifies several significant limitations and areas for improvement. The system suffers from a \textbf{monolithic architecture} that tightly couples all components, making it difficult to maintain, extend, or deploy in modern containerized environments. The absence of dockerization further complicates deployment and scaling. The application relies on \textbf{outdated libraries}, most notably the Java library Stripes, which is no longer maintained, creating security and sustainability concerns.
 
@@ -661,16 +661,16 @@ The system also exhibits limitations in meeting current infrastructure demands. 
 
 Another concern identified is a \textbf{potential GDPR violation}: the system displays information about all users that currently have active jobs and their jobs within MetaCentrum, which may not comply with data protection regulations regarding the visibility of personal computational activity to other users.
 
-In summary, while PBSmon has been functional and valuable, its monolithic architecture, outdated technology stack, lack of containerization support, suboptimal user experience, incomplete feature coverage for modern computing needs, and potential privacy compliance issues necessitate a fundamental redesign and modernization of the system.
+In summary, while PBSMon has been functional and valuable, its monolithic architecture, outdated technology stack, lack of containerization support, suboptimal user experience, incomplete feature coverage for modern computing needs, and potential privacy compliance issues necessitate a fundamental redesign and modernization of the system.
 
 
 \chapter{Relevant applications and technologies}
 \label{chap:relevant-applications-and-technologies}
 
-This chapter summarizes selected applications and technologies related to the operation and future evolution of the MetaCentrum computing infrastructure, as well as monitoring and user-facing access patterns relevant to this thesis. Besides the PBS-based grid environment, MetaCentrum also provides web-based user portals, project and allocation tooling, metrics-based monitoring stacks, and container platforms. These components form an ecosystem in which the modernized PBSmon solution is expected to operate and where future integrations may be considered.
+This chapter summarizes selected applications and technologies related to the operation and future evolution of the MetaCenter computing infrastructure, as well as monitoring and user-facing access patterns relevant to this thesis. Besides the PBS-based grid environment, MetaCenter also provides web-based user portals, project and allocation tooling, metrics-based monitoring stacks, and container platforms. These components form an ecosystem in which the modernized PBSMon solution is expected to operate and where future integrations may be considered.
 
 \section{Open OnDemand}
-Open OnDemand is a web-based portal designed to provide end users with interactive access to computing resources directly from a web browser \cite{Hudak2018OpenOnDemand}. In MetaCentrum, the OnDemand instance enables users to work with files through a graphical file manager, run interactive applications, and create or modify batch jobs using a GUI-oriented workflow \cite{MetacentrumOnDemandDocs}.
+Open OnDemand is a web-based portal designed to provide end users with interactive access to computing resources directly from a web browser \cite{Hudak2018OpenOnDemand}. In MetaCenter, the OnDemand instance enables users to work with files through a graphical file manager, run interactive applications, and create or modify batch jobs using a GUI-oriented workflow \cite{MetacentrumOnDemandDocs}.
 
 A key benefit of OnDemand is the ability to start interactive workloads (e.g., desktop sessions or specialized applications) without requiring local software installation, which reduces the entry barrier for less experienced users and accelerates experimentation \cite{MetacentrumOnDemandDocs}. In addition, OnDemand provides browser-based shell access to selected frontends, effectively allowing users to open a terminal session in the browser and submit jobs using standard cluster tooling when needed \cite{MetacentrumOnDemandDocs}.
 
@@ -679,27 +679,27 @@ From the perspective of monitoring, OnDemand primarily targets user interaction 
 \section{Zeus}
 Zeus is a CESNET web application developed for MetaCentrum to support project and resource allocation workflows for both PBS-managed compute resources and cloud resources. The system focuses on capturing and managing project-related processes, enabling users to request quotas, and allowing administrators to allocate requested resources. An important part of the solution is integration with the Perun identity and access management system, including propagation of project information towards computing resources \cite{Valalsky2025thesis}.
 
-Compared to PBSmon, Zeus is not a monitoring tool; it addresses a different layer of the infrastructure lifecycle (project management and allocation rather than operational state visualization). Nevertheless, Zeus is relevant when considering the long-term evolution of the monitoring ecosystem: allocation and project metadata can become an important enrichment signal for monitoring dashboards (e.g., mapping jobs and users to projects, quotas, or allocation decisions). Therefore, Zeus is considered a potential integration point for future PBSmon extensions \cite{Valalsky2025thesis}.
+Compared to PBSMon, Zeus is not a monitoring tool; it addresses a different layer of the infrastructure lifecycle (project management and allocation rather than operational state visualization). Nevertheless, Zeus is relevant when considering the long-term evolution of the monitoring ecosystem: allocation and project metadata can become an important enrichment signal for monitoring dashboards (e.g., mapping jobs and users to projects, quotas, or allocation decisions). Therefore, Zeus is considered a potential integration point for future PBSMon extensions \cite{Valalsky2025thesis}.
 
 \section{Prometheus}
 Prometheus is an open-source monitoring and alerting toolkit that collects and stores metrics as time series enriched by labels. It is widely used for infrastructure and application monitoring and provides a flexible query language (PromQL) for aggregations and alerting \cite{PrometheusOverview,Brazil2018Prometheus}. Prometheus is typically deployed in a pull-based model, where the Prometheus server scrapes metrics endpoints exposed by monitored targets at regular intervals \cite{PrometheusOverview}.
 
-In this thesis, Prometheus is therefore considered primarily as a complementary monitoring technology for the OpenStack part of the infrastructure, not as a replacement for PBS entity monitoring. While PBSmon focuses on presenting structured state of PBS objects (jobs, nodes, queues) and their relationships, Prometheus provides metrics for OpenStack projects and infrastructure. Both approaches can coexist: Current PBSmon provides primarily domain-specific views of PBS entities, whereas Prometheus-based monitoring can cover cloud services and selected operational indicators in parallel. This thesis aims to integrate OpenStack metrics into the new PBSmon solution.
+In this thesis, Prometheus is therefore considered primarily as a complementary monitoring technology for the OpenStack part of the infrastructure, not as a replacement for PBS entity monitoring. While PBSMon focuses on presenting structured state of PBS objects (jobs, nodes, queues) and their relationships, Prometheus provides metrics for OpenStack projects and infrastructure. Both approaches can coexist: Current PBSMon provides primarily domain-specific views of PBS entities, whereas Prometheus-based monitoring can cover cloud services and selected operational indicators in parallel. This thesis aims to integrate OpenStack metrics into the new PBSMon solution.
 
 
 \subsection{Thanos}
 Thanos is a set of components that extends Prometheus deployments with features such as long-term storage in object storage, high availability, and a global query view across multiple Prometheus instances \cite{ThanosWebsite,ThanosGitHub}. In practice, Thanos addresses typical Prometheus limitations related to retention, high-availability operation, and querying across multiple Prometheus servers \cite{ThanosWebsite,ThanosGitHub}.
 
-This thesis does not adopt Thanos, because the primary goal is to provide a reliable view of the current operational state of the MetaCentrum PBS-based grid environment, rather than to design a long-term metrics retention and global query layer. Nevertheless, Thanos remains relevant as a future consideration if PBSmon (or surrounding infrastructure) evolves towards stronger historical analytics.
+This thesis does not adopt Thanos, because the primary goal is to provide a reliable view of the current operational state of the MetaCentrum PBS-based grid environment, rather than to design a long-term metrics retention and global query layer. Nevertheless, Thanos remains relevant as a future consideration if PBSMon (or surrounding infrastructure) evolves towards stronger historical analytics.
 
 \section{Kubernetes}
 Kubernetes is an open-source container orchestration platform for automating deployment, scaling, and management of containerized applications \cite{KubernetesDocs,Burns2022Kubernetes}. It provides a declarative model for running workloads, service discovery, and operational automation that is now standard in cloud-native environments \cite{KubernetesDocs,Burns2022Kubernetes}.
 
-MetaCentrum (within e-INFRA CZ) also operates a container platform based on Kubernetes, including a Rancher-based distribution and related user-facing tooling \cite{EinfraHPCKubernetes}. This is relevant for PBSmon because Kubernetes-based services are part of the broader infrastructure portfolio and strengthen the requirement for modularity and extensibility of monitoring solutions.
+MetaCentrum (within e-INFRA CZ) also operates a container platform based on Kubernetes, including a Rancher-based distribution and related user-facing tooling \cite{EinfraHPCKubernetes}. This is relevant for PBSMon because Kubernetes-based services are part of the broader infrastructure portfolio and strengthen the requirement for modularity and extensibility of monitoring solutions.
 
 \chapter{Design of the New Solution}
 \label{chap:design}
-Building upon the analysis in Chapter~\ref{chap:analysis}, this chapter focuses on the design of a modern replacement for the original PBSmon system. The goal is to propose a solution that not only preserves the existing functionality, but also improves maintainability, usability and alignment with current infrastructure and security requirements.
+Building upon the analysis in Chapter~\ref{chap:analysis}, this chapter focuses on the design of a modern replacement for the original PBSMon system. The goal is to propose a solution that not only preserves the existing functionality, but also improves maintainability, usability and alignment with current infrastructure and security requirements.
 
 In addition to the functional rewriting of the existing features, the new design must introduce first-class support for working with OpenStack. In particular, it has to enable users to view OpenStack projects, the virtual machines assigned to them, and other relevant metadata in a clear and structured manner consistent with how resources are organised in the underlying cloud environment.
 
@@ -715,7 +715,7 @@ The goal of the new solution is to provide a read-only monitoring application th
 \subsection{Domain Entities and Data Sources}
 \label{sec:domain-entities}
 
-The new solution reuses most of the domain model of the original PBSmon application and extends it with entities from the OpenStack environment. PBS and Perun entities were already introduced in the description of the existing solution (see Chapter~\ref{chap:analysis}); this section briefly summarises them and then focuses on the new OpenStack concepts that motivate several of the following requirements.
+The new solution reuses most of the domain model of the original PBSMon application and extends it with entities from the OpenStack environment. PBS and Perun entities were already introduced in the description of the existing solution (see Chapter~\ref{chap:analysis}); this section briefly summarises them and then focuses on the new OpenStack concepts that motivate several of the following requirements.
 
 \subsubsection*{PBS and Perun (recap)}
 
@@ -813,7 +813,7 @@ At the same time, the current users are already familiar with the existing inter
 
 Another important requirement was to keep the visual identity of the MetaCentrum computing grid\footnote{\url{https://www.metacentrum.cz/en/}}. The brand colour is a distinctive shade of orange, which is already used in existing tools and documentation and therefore forms an important part of the user experience. However, large orange areas on the screen can be visually tiring and, in extreme cases, reduce readability. For this reason, the new interface is based on a dark grey theme that serves as a neutral background, while orange is used as an accent colour for interactive elements such as primary buttons, active navigation items and important status indicators. This approach preserves the recognisable MetaCentrum brand while improving visual comfort during long-term use.
 
-For the design process, the Figma tool was used to create the visual specification of the interface. In Figma, a set of basic building blocks was first defined as reusable components, ensuring consistency across the entire application and simplifying future modifications. On top of these components, the main layout was designed, including a sidebar menu for navigation between the key parts of the application and a content area for displaying overviews and detail views. The resulting design of the new personal view is illustrated in Figure~\ref{fig:new-pbsmon-gui-design} and serves both as a communication tool with stakeholders and as a reference for the implementation of the frontend.
+For the design process, the Figma tool was used to create the visual specification of the interface. In Figma, a set of basic building blocks was first defined as reusable components, ensuring consistency across the entire application and simplifying future modifications. On top of these components, the main layout was designed, including a sidebar menu for navigation between the key parts of the application and a content area for displaying overviews and detail views. The resulting design of the new personal view is illustrated in Figure~\ref{fig:new-pbsMon-gui-design} and serves both as a communication tool with stakeholders and as a reference for the implementation of the frontend.
 
 \begin{figure}[h]
   \centering
@@ -886,7 +886,7 @@ The chosen architecture also has disadvantages that need to be acknowledged:
   \item \textbf{Monorepo maintenance} -- while a monorepo simplifies code sharing, it also requires consistent tooling and conventions to keep the structure manageable as the project grows.
 \end{itemize}
 
-Despite these drawbacks, the benefits of a clear separation between the data layer and the user interface, combined with the practical advantages of a monorepo for this relatively small project, were considered more important. In particular, the need to integrate multiple heterogeneous data sources, enforce non-trivial access rules and support future extensions favours an API-centric architecture. The resulting design provides a flexible and maintainable foundation for the new PBSmon replacement.
+Despite these drawbacks, the benefits of a clear separation between the data layer and the user interface, combined with the practical advantages of a monorepo for this relatively small project, were considered more important. In particular, the need to integrate multiple heterogeneous data sources, enforce non-trivial access rules and support future extensions favours an API-centric architecture. The resulting design provides a flexible and maintainable foundation for the new PBSMon replacement.
 
 
 \section{Selected technologies}
@@ -941,9 +941,9 @@ In this project, Docker is used to containerise the backend API, the frontend an
 \chapter{Implementation}
 \label{chap:implementation}
 
-This chapter describes the implementation of the new PBSmon solution. The main objective was not only to migrate the legacy monolithic system to a modern technology stack, but also to deliver a maintainable and extensible codebase that supports the current scope of MetaCentrum infrastructure. In particular, the implementation covers monitoring data obtained from the PBS scheduling environment and extends the original functionality by integrating OpenStack as an additional data source.
+This chapter describes the implementation of the new PBSMon solution. The main objective was not only to migrate the legacy monolithic system to a modern technology stack, but also to deliver a maintainable and extensible codebase that supports the current scope of MetaCentrum infrastructure. In particular, the implementation covers monitoring data obtained from the PBS scheduling environment and extends the original functionality by integrating OpenStack as an additional data source.
 
-The resulting system is implemented as a separated backend and frontend that communicate via a JSON API. This separation enables clearer responsibility boundaries, simplifies testing, and allows both parts to evolve independently. At the same time, the implementation keeps the core purpose of PBSmon intact: regularly collecting infrastructure metadata, normalizing it into a consistent representation, and presenting it to users in a readable form.
+The resulting system is implemented as a separated backend and frontend that communicate via a JSON API. This separation enables clearer responsibility boundaries, simplifies testing, and allows both parts to evolve independently. At the same time, the implementation keeps the core purpose of PBSMon intact: regularly collecting infrastructure metadata, normalizing it into a consistent representation, and presenting it to users in a readable form.
 
 
 \section{Authorization and Authentication}
@@ -953,7 +953,7 @@ TBD - using Perun's e-infra AAI, using OIDC token
 \section{System Architecture}
 \label{sec:system-architecture-new}
 
-This chapter describes the implementation of PBSmon 2.0 and explains how the individual parts of the system were realized in code. The project is implemented as a monorepo and consists of multiple runtime components that together provide data collection, a JSON API, and a web-based user interface. The repository is structured into the following main components:
+This chapter describes the implementation of PBSMon 2.0 and explains how the individual parts of the system were realized in code. The project is implemented as a monorepo and consists of multiple runtime components that together provide data collection, a JSON API, and a web-based user interface. The repository is structured into the following main components:
 
 
 \begin{itemize}
@@ -970,7 +970,7 @@ At runtime, user requests are handled through the reverse proxy, which serves th
 
 \section{API}
 \label{sec:impl-api}
-The backend API forms the integration layer between the monitored infrastructure and the web user interface. Its primary purpose is to provide a JSON API for the frontend while hiding the complexity of individual data sources. In PBSmon 2.0, the API aggregates monitoring data from the PBS environment, Perun and OpenStack, normalizes them into a consistent representation, and exposes them through JSON endpoints.
+The backend API forms the integration layer between the monitored infrastructure and the web user interface. Its primary purpose is to provide a JSON API for the frontend while hiding the complexity of individual data sources. In PBSMon 2.0, the API aggregates monitoring data from the PBS environment, Perun and OpenStack, normalizes them into a consistent representation, and exposes them through JSON endpoints.
 
 
 \newpage
@@ -1010,7 +1010,7 @@ The \texttt{pbs-collector} microservice is therefore responsible for periodic re
 
 \subsection{Perun data collection}
 \label{sec:perun-data-collection}
-Perun is not collected by PBSmon in the same way as PBS or OpenStack, because the required data are provided to PBSmon via a push mechanism external to the application. For this reason, PBSmon does not implement an active Perun client; instead, it only consumes prepared Perun exports.
+Perun is not collected by PBSMon in the same way as PBS or OpenStack, because the required data are provided to PBSMon via a push mechanism external to the application. For this reason, PBSMon does not implement an active Perun client; instead, it only consumes prepared Perun exports.
 
 Within the API repository, Perun-related inputs are stored under \texttt{/api/data/perun/}. This directory contains static JSON files:
 
@@ -1019,7 +1019,7 @@ Within the API repository, Perun-related inputs are stored under \texttt{/api/da
   \item \texttt{pbsmon\_machines.json} -- machines data from Perun.
 \end{itemize}
 
-These files were described in more detail in section~\ref{subsec:entities-in-perun}. During development, these files were mocked to enable frontend and API development without relying on the external Perun export pipeline. In production, the application follows the same approach as the legacy PBSmon and loads these JSON files directly from the filesystem at runtime.
+These files were described in more detail in section~\ref{subsec:entities-in-perun}. During development, these files were mocked to enable frontend and API development without relying on the external Perun export pipeline. In production, the application follows the same approach as the legacy PBSMon and loads these JSON files directly from the filesystem at runtime.
 
 
 \subsection{OpenStack data collection}
@@ -1138,7 +1138,7 @@ The \emph{Machine detail} view provides a single-node overview: identification (
 \subsection{Storage spaces}
 \label{subsec:storage-spaces}
 
-The \emph{Storage Spaces} page provides an overview of shared storage and its current free capacity. This information is useful for both users and administrators, because these disk arrays are typically used for persistent data (eq. for storing job outputs). User quota information is not shown in the current implementation; showing personal quotas was not part of the old PBSmon and is left as a potential future improvement.
+The \emph{Storage Spaces} page provides an overview of shared storage and its current free capacity. This information is useful for both users and administrators, because these disk arrays are typically used for persistent data (eq. for storing job outputs). User quota information is not shown in the current implementation; showing personal quotas was not part of the old PBSMon and is left as a potential future improvement.
 This page satisfies \textbf{FR-12 View storage spaces}.
 
 \paragraph{Consumed API endpoint.}
@@ -1322,7 +1322,7 @@ TBD - simply state conclusion
 \chapter{OpenStack Response Example}
 \label{app:openstack-response-example}
 
-This appendix contains an example of the JSON response structure for the OpenStack cluster named "glados" that is collected by the PBSmon system.
+This appendix contains an example of the JSON response structure for the OpenStack cluster named "glados" that is collected by the PBSMon system.
 
 \begin{lstlisting}[caption={Example response for OpenStack cluster "glados"},
   label={lst:openstack-glados-response}]
