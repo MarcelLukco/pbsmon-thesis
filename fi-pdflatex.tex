@@ -741,6 +741,7 @@ The system defines two roles:
 \end{itemize}
 
 \subsection{Functional Requirements for Users}
+\label{subsec:functional-requirements-for-users}
 
 A regular user must be able to use the application as a personal monitoring dashboard and as a tool for exploring the infrastructure relevant to their work. The following functional requirements apply:
 
@@ -765,7 +766,7 @@ A regular user must be able to use the application as a personal monitoring dash
   \item[FR-05 View queues]  
   The system shall provide an overview of all PBS queues, including their basic configuration and purpose, so that users can understand where their jobs are being scheduled.
 
-  \item[FR-06 View infrastructure and reservations]  
+  \item[FR-06 View infrastructure]  
   The system shall provide a view of the MetaCentrum infrastructure based on Perun data, showing organisations, clusters and nodes, together with information about existing reservations on these resources. Only reservation information shall be displayed; actual usage of the resources is out of scope due to missing data.
 
   \item[FR-07 View users within groups]  
@@ -1034,46 +1035,88 @@ The API contract is described using an OpenAPI specification, which defines the 
 \label{sec:page-views}
 This section describes the implemented frontend page views and how they present monitoring information to end users. Each view corresponds to a specific domain area of the system (e.g., jobs, nodes, queues, outages, news, or OpenStack-related data) and is implemented as a composition of reusable UI components such as tables, filters, and detail panels. The pages obtain all data exclusively through the backend JSON API, which keeps the frontend independent of the underlying infrastructure protocols and allows the UI to evolve without changing data-collection logic.
 
-% For every page view, the following aspects are documented: its purpose and displayed data, the API endpoints it consumes, and the main interaction patterns provided to the user (sorting, filtering, paging, and error/loading states). This makes the connection between the backend modules and the user-facing interface explicit and shows how the collected data are transformed into actionable monitoring views.
+\subsection{Layout and navigation}
+\label{subsec:layout-and-navigation}
 
+The frontend uses a dashboard-style layout consisting of a persistent navigation sidebar on the left and a main content area on the right (Figure~\ref{fig:ui-layout}). The sidebar provides the primary navigation between page views, while the main content area displays the currently selected view.
 
-Layout and navigation are TBD - describe layout and navigation, the lists of page views 
+The navigation contains two top-level entries (\emph{Personal View} and \emph{Qsub Assembler}) and an expandable group \emph{Resource Status}. The \emph{Resource Status} group aggregates the main monitoring domains and links to the corresponding views: \emph{Machines}, \emph{Storage Spaces}, \emph{Cloud Projects}, \emph{Jobs Queues}, \emph{Jobs}, \emph{Waiting Jobs}, \emph{Users}, and \emph{Groups}. A small header area above the content provides global controls such as language switching. The lower part of the sidebar contains auxiliary links (support, documentation, FAQ).
 
+The following subsections describe the individual page views listed in the navigation. Each subsection explains what data the view presents and which backend API endpoints it consumes.
 
-\subsection{Personal view}
-\label{subsec:new-personal-view}
-TBD
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/layout.png}
+  \caption{Frontend layout with a navigation sidebar}
+  \label{fig:ui-layout}
+\end{figure}
+
+\newpage
+\subsection{Personal View}
+\label{subsec:personal-view}
+
+The \emph{Personal View} page provides a personalized overview of monitoring data related to the currently authenticated user (Figure~\ref{fig:ui-personal-view}). Its purpose is to present a compact summary of the user’s current activity across both the PBS environment and cloud projects. This page implements \textbf{FR-01 Personal overview} by combining high-level totals with a direct listing of jobs and cloud projects.
+
+The upper part of the page contains a \emph{My Statistics} panel with two summary cards. The first card (\emph{Total Tasks}) displays aggregated counts of the user’s tasks by state (queued, running, done) together with the total. The second card (\emph{Resource Utilization}) provides a similar breakdown for reserved resources, separated into CPU and GPU sections.
+
+Below the summary, the page presents two main lists:
+(i) \emph{My PBS Jobs}, which shows the currently relevant PBS jobs (including state, job identifier, job name, target machine, and reserved resources such as CPU/GPU/RAM), and
+(ii) \emph{My Cloud Projects}, which lists cloud projects accessible to the user together with basic project metadata and reserved resource totals. Both lists are displayed in a table form and provide an ordering and a simple search field.
+
+\paragraph{Consumed API endpoints.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image of the page
+  \item \texttt{GET /pbs/jobs} -- source of PBS job data rendered in \emph{My PBS Jobs}, and total statistics of PBS jobs.
+  \item \texttt{GET /projects} -- source of cloud project data rendered in \emph{My Cloud Projects}.
 \end{itemize}
+
+\begin{figure}[t]
+  \centering
+  % Replace with the actual relative path in your repository.
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/personal-view-full.png}
+  \caption{Personal View page showing a user-oriented overview: summary statistics, active PBS jobs, and accessible cloud projects.}
+  \label{fig:ui-personal-view}
+\end{figure}
 
 
 \subsection{QSUB assembler}
 \label{subsec:new-qsub-assembler}
-TBD
+
+The \emph{QSUB Assembler} page helps users compose a valid PBS job submission based on selected resource requirements and provides a preview of nodes that satisfy these requirements. Its main purpose is to returns a \texttt{qsub} command and or A PBS job script template that the user can use to submit the job. As well as to show the user the nodes that satisfy the requirements.
+This page satisfies \textbf{FR-10 QSUB assembler}. 
+
+Figure~\ref{fig:ui-qsub-assembler-form} (see Appendix~\ref{app:qsub-assembler-figures}) shows the initial state of the page, which consists mainly of a configuration form. The form is split into \emph{Basic Settings} (e.g., walltime, queue, CPU count, RAM, GPU requirements, scratch) and \emph{Advanced Settings} (e.g., architecture/vendor constraints and additional selectors such as PBS server or OS-related constraints).
+
+After the user requests a preview (button \emph{Show Results}), the page displays the computed output (Figure~\ref{fig:ui-qsub-assembler-results}, see Appendix~\ref{app:qsub-assembler-figures}). The results section contains:
+(i) a one-line \texttt{qsub} command that reflects the selected requirements,
+(ii) a PBS job script template containing \texttt{\#PBS} directive lines (PBS job script directives),
+and (iii) a summary of matching resources, including statistics such as the number of qualified nodes and the number of nodes immediately available, followed by a list/grid of qualified nodes with their current utilization. The preview is intended to provide quick feedback on feasibility (whether the requested resources exist and how constrained the request is) and to offer a copy-ready submission template.
+
+\paragraph{Consumed API endpoints.}
+The view obtains data from two backend endpoints:
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image of the page
+  \item \texttt{GET /qsub/config} -- returns the form configuration (available queues, selectable constraint values, and other UI options). This allows to backend to dynamically update the form based on api configuration.
+  \item \texttt{POST /qsub/preview} -- evaluates the submitted requirements and returns the preview output (qualified nodes, generated \texttt{qsub} command, and PBS script template).
 \end{itemize}
+
 
 \subsection{Machines}
 \label{subsec:machines}
 
-TBD
+The \emph{Machines} page shows the MetaCentrum infrastructure in a single hierarchical view: \emph{organization} $\rightarrow$ \emph{cluster} $\rightarrow$ \emph{node} (Figure~\ref{fig:ui-machines}). It provides overall totals (organizations, clusters, nodes, CPU, GPU) and displays node cards with current state (e.g., occupied, partially free, maintenance) and per-node resource indicators. A right-side \emph{Quick Links} panel enables fast navigation between organizations. The content is identical for users and administrators; no anonymization is applied.
+This page satisfies \textbf{FR-06 View infrastructure}. 
+
+\paragraph{Consumed API endpoint.}
 \begin{itemize}
-  \item purpose 
-  \item displayed data + user interactions 
-  \item API endpoints
-  \item covered use cases
-  \item Image of the page
+  \item \texttt{GET /infrastructure} - returns all infrastructure data in a hierarchical structure. This includes organizations, clusters, and nodes with their current state and resource indicators.
 \end{itemize}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/machines.png}
+  \caption{Machines page overview.}
+  \label{fig:ui-machines}
+\end{figure}
+
 
 \subsubsection{Node detail view}
 TBD
@@ -1285,5 +1328,28 @@ This appendix contains an example of the JSON response structure for the OpenSta
     }
 ]
 \end{lstlisting}
+
+\chapter{QSUB Assembler Figures}
+\label{app:qsub-assembler-figures}
+
+This appendix contains the figures for the QSUB Assembler page, which are too large to include in the main text.
+
+\begin{figure}[p]
+  \centering
+  % Replace with your actual path
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/qsub-assembler.png}
+  \caption{QSUB Assembler page: configuration form for job requirements and constraints.}
+  \label{fig:ui-qsub-assembler-form}
+\end{figure}
+
+\begin{figure}[p]
+  \centering
+  % Replace with your actual path
+  \includegraphics[width=\textwidth]{figures/new-pbsmon/qsub-assembler-results.png}
+  \caption{QSUB Assembler page after preview: generated \texttt{qsub} command, PBS job script template (\texttt{\#PBS} directives), and a list of qualified nodes with availability summary.}
+  \label{fig:ui-qsub-assembler-results}
+\end{figure}
+
+\clearpage
 
 \end{document}
