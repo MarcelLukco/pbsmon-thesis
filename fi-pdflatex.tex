@@ -677,6 +677,7 @@ A key benefit of OnDemand is the ability to start interactive workloads (e.g., d
 From the perspective of monitoring, OnDemand primarily targets user interaction and job submission. It intentionally presents a simplified view tailored to the logged-in user workflow (files, sessions, job composer) and does not aim to replace an operator-oriented monitoring tool that exposes detailed, cluster-wide state and relationships between PBS entities (nodes, queues, scheduling policies, historical trends). Furthermore, authentication is performed using the user's academic identity, which limits administrative impersonation-style workflows and cross-user views compared to dedicated monitoring or administration tooling \cite{MetacenterOnDemandDocs,Hudak2018OpenOnDemand}.
 
 \section{Zeus}
+\label{sec:project-zeus}
 Zeus is a CESNET web application developed for MetaCenter to support project and resource allocation workflows for both PBS-managed compute resources and cloud resources. The system focuses on capturing and managing project-related processes, enabling users to request quotas, and allowing administrators to allocate requested resources. An important part of the solution is integration with the Perun identity and access management system, including propagation of project information towards computing resources \cite{Valalsky2025thesis}.
 
 Compared to PBSMon, Zeus is not a monitoring tool; it addresses a different layer of the infrastructure lifecycle (project management and allocation rather than operational state visualization). Nevertheless, Zeus is relevant when considering the long-term evolution of the monitoring ecosystem: allocation and project metadata can become an important enrichment signal for monitoring dashboards (e.g., mapping jobs and users to projects, quotas, or allocation decisions). Therefore, Zeus is considered a potential integration point for future PBSMon extensions \cite{Valalsky2025thesis}.
@@ -822,26 +823,44 @@ For the design process, the Figma tool was used to create the visual specificati
   \label{fig:new-pbsmon-gui-design}
 \end{figure}
 
-
+\newpage
 \section{Architecture Design}
 \label{sec:architecture-design}
+The solution is implemented as a modular web application composed of multiple cooperating components. It provides a user interface, a backend HTTP API, and a dedicated PBS data-collection service. The components are deployed behind a reverse proxy and integrate with external infrastructure systems (PBS, Perun, and OpenStack metrics).
 
-The new solution is designed as a two-layer web application consisting of a backend API and a separate frontend. The backend exposes the domain data and operations through a JSON-based HTTP API, while the frontend is responsible for rendering the user interface and handling user interaction in the browser. This separation follows a common pattern used in modern web applications and reflects the requirements for flexibility, maintainability and potential reuse of the data layer.
 
-Both layers are developed in a single monorepository (monorepo). The monorepo contains the API and frontend as separate packages (or subprojects) that may share common code where appropriate (for example domain models or API client definitions), while still preserving a clear logical separation between the two layers.
+All application components are developed in a single git repository (monorepo). The monorepo contains the frontend, backend API, PBS data-collection service and reverse proxy. This setup enables coordinated development and shared tooling while preserving clear boundaries between components.
 
-\subsection{Overview of the Two-Layer Architecture}
+\subsection{Main Components}
+\label{subsec:main-components}
 
-The backend API layer integrates data from PBS, Perun and OpenStack, transforms them into a unified domain model and enforces the access control rules based on the \emph{user} and \emph{admin} roles. It is implemented as a stateless web service that returns all responses in JSON format. Its only responsibility is to serve data and perform server-side computations such as aggregation, filtering and anonymisation.
+The architecture consists of the following main components (Figure~\ref{fig:architecture-diagram}):
 
-The frontend layer is implemented as a separate web application that runs in the user's browser. It communicates with the API using HTTP requests, consumes the JSON responses and renders them into the graphical user interface described in Section~\ref{sec:gui-design}. The frontend handles navigation between views, local state management (e.g. filters and sorting) and presents the data in tables, charts and detail pages.
+\begin{itemize}
+  \item \textbf{Reverse proxy (Nginx)} --- acts as a single entry point for the application and routes requests to the frontend or the backend API.
+  \item \textbf{Frontend (React)} --- a browser application responsible for rendering page views and handling user interaction. It consumes monitoring data exclusively through the backend API.
+  \item \textbf{Backend API (NestJS)} --- exposes the system functionality and domain data through a JSON-based HTTP API. It enforces authentication/authorization rules and provides a unified interface for the frontend.
+  \item \textbf{PBS Collector microservice} --- encapsulates PBS-specific communication and periodic data collection. This separates low-level PBS integration from the API and keeps API request handling independent of polling logic.
+  \item \textbf{External systems} --- PBS server (cluster state), Perun (push-based membership/identity data), Prometheus (OpenStack metrics) and Accounting database (PostgreSQL).
+\end{itemize}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=1\textwidth]{figures/architecture-diagram.png}
+  \caption{Architecture diagram}
+  \label{fig:architecture-diagram}
+\end{figure}
+
+\subsection{Reverse Proxy}
+\label{subsec:reverse-proxy}
+The application is deployed behind an Nginx reverse proxy, which provides a single public entry point for all HTTP traffic. The proxy routes requests either to the frontend (static assets and client-side routing) or to the backend API based on the requested path. This simplifies deployment by hiding internal service topology from users and enables handling cross-cutting concerns consistently in one place, such as TLS termination, basic request filtering, and response compression.
 
 \subsection{API Layer}
 
 The API layer acts as an integration and abstraction layer over the underlying systems:
 
 \begin{itemize}
-  \item It collects data from PBS, Perun and OpenStack and periodically fetches the necessary entities (jobs, nodes, queues, reservations, users, infrastructure descriptions, projects, virtual machines, \dots).
+  \item It collects data from external systems and periodically fetches/checks the necessary entities (jobs, nodes, queues, reservations, users, infrastructure descriptions, projects, virtual machines, \dots).
   \item It normalises and combines the collected data into a consistent model tailored to the needs of the monitoring application.
   \item It implements role-based access control and anonymisation rules as described in the functional requirements, including the distinction between regular users and administrators.
   \item It exposes the data through a set of endpoints that return JSON, covering overviews (e.g. lists of jobs or projects) as well as detail views for individual entities.
@@ -849,52 +868,31 @@ The API layer acts as an integration and abstraction layer over the underlying s
 
 By concentrating all domain logic and access control in the API, the system ensures that the same rules are applied consistently regardless of the client and that sensitive operations cannot be bypassed by directly accessing the underlying systems.
 
+\subsection{PBS Collector Microservice}
+\label{subsec:pbs-collector-microservice}
+During the architectural design, an important decision concerned how PBS data should be acquired and integrated into the system. Instead of embedding PBS communication directly into the main API, the design introduces a separate service, \texttt{pbs-collector}, responsible solely for periodic PBS data acquisition.
+
+This decision follows from the operational characteristics of the PBS environment. Access to PBS requires specific dependencies and runtime conditions, such as the \texttt{libopenpbs} IFL library, a compatible operating system environment, and a properly configured Kerberos setup. Including these requirements in the API service would increase deployment complexity and tightly couple the API runtime to PBS-specific constraints.
+
+The separation is also motivated by reliability. Experience with the legacy PBSMon solution showed that the integration with the IFL library may be unstable over long runtimes, including failures attributable to memory leaks in the OpenPBS library. In a monolithic design, such issues could compromise the availability of the whole application, because a fault in the PBS integration would directly impact the API and therefore the user interface.
+
+To address these risks, the design isolates PBS collection into a dedicated component that can be constrained and managed independently. The \texttt{pbs-collector} service periodically retrieves core PBS entities (e.g., jobs, nodes, queues, and related objects) and exports them in an intermediate form for consumption by the API. As a result, the main API remains focused on consolidating data sources, enforcing access control, and serving the unified domain model, while PBS-specific dependencies and failure modes are contained within the dedicated collector service.
+
 \subsection{Frontend Layer}
+The frontend layer is implemented as a React application that is responsible for rendering the user interface and handling user interaction. It consumes the data from the API and renders it into the graphical user interface described in Section~\ref{sec:gui-design}.
 
-The frontend layer consumes the API and transforms the JSON data into an interactive web interface:
-
-\begin{itemize}
-  \item It provides the personal view for users, including their own statistics, jobs and OpenStack projects.
-  \item It renders overviews of jobs, queues, infrastructure and reservations, with client-side filtering and sorting where appropriate.
-  \item It presents anonymised or full data depending on the current role, based on information obtained from the API.
-  \item It implements the QSUB assembler, where the user selects parameters and the frontend assembles a command that can be copied to a terminal.
-\end{itemize}
-
-Because the frontend is decoupled from the backend at the API boundary, it can be developed and iterated independently at the application level, even though both parts live in the same monorepo. The visual design can evolve without changes to the data layer as long as the API contract remains stable.
-
-\subsection{Rationale, Advantages and Disadvantages}
-
-The choice of a two-layer architecture with a JSON-based API and a separate frontend, implemented together in a monorepo, was motivated by several considerations.
-
-Among the main advantages are:
-
-\begin{itemize}
-  \item \textbf{Separation of concerns} -- the API focuses on data integration, business logic and security, while the frontend focuses on user experience and presentation. This separation simplifies reasoning about each part and reduces coupling.
-  \item \textbf{Reuse and extensibility} -- the API can later be reused by other clients (for example command-line tools, scripts or additional internal applications) without changes to the core logic. New frontend features can be added as long as they build on the existing endpoints.
-  \item \textbf{Monorepo code sharing} -- keeping the API and frontend in a single monorepo enables straightforward sharing of common code, such as type definitions, domain models or API client libraries, which reduces duplication and the risk of inconsistencies between layers.
-  \item \textbf{Coordinated development} -- the monorepo makes it easy to evolve the API and frontend together in a single change set, while the architectural separation still allows developers to work on backend and frontend parts with clear boundaries.
-  \item \textbf{Potential for independent deployment} -- even though the code is stored in a single repository, the API and frontend can be built and deployed as separate artefacts if needed (for example scaling the API independently), which is important for handling peaks in monitoring queries.
-  \item \textbf{Security} -- all access control and anonymisation logic is centralised in the API layer, so there is a single place where role-based rules are enforced and audited.
-\end{itemize}
-
-The chosen architecture also has disadvantages that need to be acknowledged:
-
-\begin{itemize}
-  \item \textbf{Increased operational complexity compared to a monolithic server-rendered application} -- there are two logical components (API and frontend) that must be configured to communicate correctly, including handling of authentication and possible cross-origin restrictions, even though they are stored in one repository.
-  \item \textbf{Network overhead} -- every interaction between the user and the data layer requires HTTP requests from the browser to the API, which may introduce additional latency compared to server-side rendering directly coupled to the data sources.
-  \item \textbf{Duplication of validation and error handling} -- some validation and error reporting needs to be implemented both in the API (for correctness and security) and in the frontend (for user-friendly messages), which slightly increases implementation effort.
-  \item \textbf{Monorepo maintenance} -- while a monorepo simplifies code sharing, it also requires consistent tooling and conventions to keep the structure manageable as the project grows.
-\end{itemize}
-
-Despite these drawbacks, the benefits of a clear separation between the data layer and the user interface, combined with the practical advantages of a monorepo for this relatively small project, were considered more important. In particular, the need to integrate multiple heterogeneous data sources, enforce non-trivial access rules and support future extensions favours an API-centric architecture. The resulting design provides a flexible and maintainable foundation for the new PBSMon replacement.
-
+\subsection{Rationale}
+The selected component-based design provides clear separation of responsibilities: presentation logic is contained in the frontend, domain rules and access control are centralized in the API, and PBS data collection logic is encapsulated in a dedicated collector service. This structure improves maintainability and supports future extensions, such as adding new infrastructure modules (e.g., additional services beyond PBS/OpenStack) without redesigning the entire system.
 
 \section{Selected technologies}
 \label{sec:selected-technologies}
 
-As mentioned earlier, the original solution was implemented as a web application. The new solution will also take the form of a web application, but it will be built on a different technology stack. When selecting the technologies, it was important to take into account current trends in web development, as well as future maintainability and extensibility.
+As mentioned earlier, the original solution was implemented as a web application. The new solution preserves this form, but it is built on a modern technology stack selected with an emphasis on long-term maintainability, extensibility, and availability of community support. The selection also reflects practical operational requirements such as container-friendly deployment, clear dependency management, and the ability to evolve the system as new infrastructure modules are introduced.
 
-As described in Section \ref{sec:architecture-design}, the new solution should be conceptually divided into two parts: an API and a frontend. To simplify development and maintenance, JavaScript was chosen as the primary programming language, enabling both parts of the system to be implemented in the same language. Specifically, NestJS is used for the API layer and React for the frontend. These technologies are described in more detail in the following subsections.
+In addition to these general criteria, an important constraint was compatibility with the ZEUS project (Section~\ref{sec:project-zeus}). ZEUS targets a similar environment and addresses related operational needs within CESNET; therefore, aligning the technology stack reduces the cost of future cooperation between the two systems. A unified stack simplifies potential integration scenarios, such as sharing common domain models, authentication and authorization mechanisms, API clients, or UI components, and it also lowers the barrier for developers to contribute across both codebases.
+
+Finally, stack unification keeps open the option that the two applications may be combined into a single project in the future. By choosing technologies consistent with ZEUS, the design avoids unnecessary fragmentation of tools and expertise and supports incremental convergence without requiring a major rewrite.
+
 
 \subsection{NestJS}
 
@@ -950,11 +948,9 @@ The resulting system is implemented as a separated backend and frontend that com
 \label{sec:authorization-and-authentication}
 TBD - using Perun's e-infra AAI, using OIDC token
 
-\section{System Architecture}
+\section{Repository directory structure}
 \label{sec:system-architecture-new}
-
-This chapter describes the implementation of PBSMon 2.0 and explains how the individual parts of the system were realized in code. The project is implemented as a monorepo and consists of multiple runtime components that together provide data collection, a JSON API, and a web-based user interface. The repository is structured into the following main components:
-
+As mentioned in section \ref{sec:architecture-design}, the new solution is implemented as a monorepo. Therefore all the modules are stored in the same repository. The repository is structured into the following main components:
 
 \begin{itemize}
   \item \texttt{api/} -- backend service exposing a JSON API consumed by the frontend. It aggregates and normalizes monitoring data from the supported infrastructure sources (PBS, Perun and OpenStack).
@@ -1003,7 +999,7 @@ The API source code is organized into the following top-level directories:
 
 \subsection{PBS data collection}
 \label{sec:pbs-data-collection}
-During the implementation, an important architectural decision concerned the placement of the PBS data collection logic: whether it should be part of the main API service or separated into an independent microservice (\texttt{pbs-collector}). The final design uses a dedicated collector because the PBS integration introduces specific and operationally demanding requirements (installation of the \texttt{libopenpbs} IFL library, a Debian-based runtime, and a properly configured Kerberos environment). In addition, prior experience with the legacy solution showed stability issues caused by memory leaks in the OpenPBS library, which could lead to process instability and, in the worst case, affect the entire server. By isolating the collector in a Docker container with explicitly defined resource limits, such failures are contained: once the limits are exceeded or the process becomes unstable, the container can be automatically restarted without impacting the API and the user interface.
+As mentioned in section \ref{subsec:pbs-collector-microservice}, the PBS data collection logic is separated into an independent microservice.
 
 The \texttt{pbs-collector} microservice is therefore responsible for periodic retrieval of PBS data and exporting it into filesystem for later processing by the API. It collects core PBS entities (e.g., jobs, nodes, queues, and related objects) using the IFL interface of \texttt{libopenpbs} (as described in Section~\ref{subsubsec:batch-interface-library}), and it also gathers fairshare values for the users via the \texttt{list\_cache} command (as described in Section~\ref{subsubsec:fairshare-metrics}). This separation keeps the API focused on data delivery and presentation concerns, while the collector encapsulates the low-level PBS-specific integration and its operational constraints.
 
@@ -1034,6 +1030,7 @@ The collection logic is implemented in the \texttt{Prometheus\-Collection\-Servi
 The API contract is described using an OpenAPI specification, which defines the available endpoints, their parameters, and response schemas. In addition to the static specification, the implementation exposes a Swagger UI that renders the OpenAPI document and provides an interactive interface for exploring and testing the API. This allows developers and administrators to call individual endpoints directly from the browser, inspect responses, and verify the expected behaviour without requiring external tools. The OpenAPI specification is included within the thesis archive.
 
 
+\newpage
 \section{Frontend - page views}
 \label{sec:page-views}
 This section describes the implemented frontend page views and how they present monitoring information to end users. Each view corresponds to a specific domain area of the system (e.g., jobs, nodes, queues, outages, news, or OpenStack-related data) and is implemented as a composition of reusable UI components such as tables, filters, and detail panels. The pages obtain all data exclusively through the backend JSON API, which keeps the frontend independent of the underlying infrastructure protocols and allows the UI to evolve without changing data-collection logic.
