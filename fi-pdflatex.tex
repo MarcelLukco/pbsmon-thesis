@@ -1312,8 +1312,14 @@ The implemented solution focuses on reliable collection and presentation of PBS,
 
 \chapter*{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
-TBD - simply state conclusion
 
+The objectives of this thesis were fulfilled by designing and implementing a new web application intended to replace the existing PBSMon monitoring tool. The resulting solution provides a modern, maintainable system for presenting the state of the computing infrastructure to end users and administrators. It is built as a modular web application with a clear separation between a backend HTTP API and a frontend, which improves extensibility and supports future development of additional features and data sources.
+
+The development was preceded by an analysis phase focused on understanding the old PBSMon implementation, identifying its limitations, and deriving requirements for the new solution. The analysis also considered the environment in which the application operates and the available external systems. Based on the identified needs, the work defined the main functional requirements  and designed an architecture.
+
+The final architecture integrates data from multiple sources, specifically PBS, Perun, and OpenStack, and exposes the processed information through a JSON-based API. To support maintainability and easier evolution of the system, the implementation uses a monorepository structure and a technology stack aligned with the ZEUS project \cite{Valalsky2025thesis}, which was an important decision due to potential future integration or merging of both solutions into a single project. The API provides role-based access control for user and administrator operations, and the API is documented through an OpenAPI specification.
+
+Future work should primarily target extending the system beyond PBS and OpenStack by adding a dedicated Kubernetes module for the MetaCentrum Kubernetes service, including both a new collector and corresponding UI views. Additional improvements include providing administrative CSV exports for selected views (e.g., jobs and nodes), displaying user storage quotas to complement compute usage in personal and user detail pages, and extending the backend API with support for PBS job submission.
 
 \appendix
 \chapter{OpenStack Response Example}
