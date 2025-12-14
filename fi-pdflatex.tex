@@ -61,7 +61,7 @@
     keywords    = {cloud, cloud computing, distributed computing, MetaCentrum},
     TeXkeywords = {cloud, cloud computing, distributed computing, MetaCentrum},
     abstract    = {%  
-      TBD
+    This thesis describes the development of a new web application intended to replace the existing PBSMon monitoring tool used in the MetaCenter environment. The work begins with an analysis of the original solution, its limitations, and relevant application and technologies relevant to MetaCenter infrastructure. Based on the identified requirements, the thesis proposes a new architecture and justifies key design decisions, including the separation into a multiple cooperating components. All of this followed by the describing of the implementation results of the new solution. Concluding in outlining possible future improvements and extensions.
     },
     thanks      = {%
     First and foremost, I would like to express my sincere gratitude to my supervisor, Mgr. Miroslav Ruda, for his valuable guidance, insightful comments, and continuous support throughout the development of this thesis.
@@ -860,7 +860,7 @@ The application is deployed behind an Nginx reverse proxy, which provides a sing
 The API layer acts as an integration and abstraction layer over the underlying systems:
 
 \begin{itemize}
-  \item It collects data from external systems and periodically fetches/checks the necessary entities (jobs, nodes, queues, reservations, users, infrastructure descriptions, projects, virtual machines, \dots).
+  \item It collects data from external systems and periodically fetches the necessary entities.
   \item It normalises and combines the collected data into a consistent model tailored to the needs of the monitoring application.
   \item It implements role-based access control and anonymisation rules as described in the functional requirements, including the distinction between regular users and administrators.
   \item It exposes the data through a set of endpoints that return JSON, covering overviews (e.g. lists of jobs or projects) as well as detail views for individual entities.
