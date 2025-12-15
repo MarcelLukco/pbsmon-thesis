@@ -199,8 +199,8 @@ The PBS server is the authority for the entire cluster: it receives and register
 \begin{itemize}
   \item \textbf{Policies and limits} -- defines and enforces scheduling and resource utilization rules (limits on job and CPU counts, job array rules, rescheduling on node failure, scheduling enable/disable).
   
-  \item \textbf{Resources and default settings} -- manages available/assigned resources and defaults (e.g., resources\_available, resources\_default, default\_chunk, default\_queue) and provides summary utilization (assigned memory/CPU/nodes).
-  
+  \item \textbf{Resources and default settings} -- manages available/assigned resources and defaults and provides summary utilization (assigned memory/CPU/nodes).
+
   \item \textbf{Integration with scheduler and reservations} -- provides parameters for the scheduler (iteration, backfill, sorting/fairshare formula) and supports time-based resource reservations (advance/standing/maintenance).
   
   \item \textbf{Security and access} -- manages access policies through ACLs (hosts, users, managers/operators), supports Kerberos/realm policies, and handles credential management/renewal.
@@ -235,11 +235,11 @@ A job can be a standalone task or a member of a job array (with multiple subjobs
 A queue is a logical structure for accepting and processing jobs---it defines its type (Execution vs. Route), resource defaults and limits, access rules, and how jobs are either executed on nodes or redirected to target queues. PBS provides the following data about queues: \cite{pbs2022}
 
 \begin{itemize}
-  \item \textbf{Identity and type} -- queue name, queue\_type (Execution/Route), Priority (weight in scheduling), operational state (enabled/started), and optionally hasnodes.
-  
+  \item \textbf{Identity and type} -- queue name, queue\_type, priority (weight in scheduling), operational state (enabled/started), and optionally has nodes.
+
   \item \textbf{State and utilization} -- 
-  aggregates such as total\_jobs and state\_count, and currently
-  assigned resources resources\_assigned.* (e.g., memory, CPUs, nodes, MPI processes).
+  aggregates such as total jobs and state count, and currently
+  assigned resources (e.g., memory, CPUs, nodes, MPI processes).
   
   \item \textbf{Policies and limits} -- resource boundaries resources\_max.* and minimums resources\_min.* (including GPU and walltime), extra rules like kill\_delay, backfill\_depth, or from\_route\_only (accepts jobs only via routing).
   
@@ -251,12 +251,7 @@ A queue is a logical structure for accepting and processing jobs---it defines it
   
   \item \textbf{Routing (Route queues)} -- route\_destinations defines target execution queues to which jobs are automatically redirected.
   
-  \item \textbf{Access and security} -- 
-  ACL toggles and lists: 
-  acl\_user\_enable/acl\_users, 
-  acl\_group\_enable/acl\_groups,
-   or acl\_host\_enable/acl\_hosts.
-  
+  \item \textbf{Access and security} -- allows to toggle access to the queue for multiple ACL levels - user, group, host.
   \item \textbf{Organizational tags} -- optional attributes such as fairshare\_tree (fairshare hierarchy) or partition (infrastructure label/partition) for logical segmentation and policy purposes.
   \cite{pbs2022}
 \end{itemize}
@@ -275,25 +270,17 @@ A node represents a physical machine in the PBS environment that provides comput
   \begin{itemize}
     \item CPU resources: ncpus (number of CPUs), pcpus (physical CPUs), cpu\_vendor, cpu\_flag (CPU feature flags)
     \item Memory: mem (total memory), vmem (virtual memory), hpmem (high-performance memory)
-    \item Accelerators: ngpus (number of GPUs), gpu\_mem, gpu\_cap (compute capability), cuda\_version
-    \item Scratch storage: scratch\_local, scratch\_shared, scratch\_ssd, scratch\_shm (shared memory)
+    \item Scratch storage 
     \item Network: ethernet\_speed, infiniband
     \item Software: singularity (container support), os, osfamily, arch
     \item Organizational: queue\_list (queues accessible from this node), cluster-specific tags
   \end{itemize}
   
-  \item \textbf{Assigned resources} -- currently allocated resources tracked by \texttt{resources\_assigned.*} attributes, including:
-  \begin{itemize}
-    \item ncpus, ngpus, naccelerators (number of assigned CPUs, GPUs, accelerators)
-    \item mem, vmem, hbmem, accelerator\_memory (assigned memory)
-    \item scratch\_local, scratch\_ssd (assigned storage)
-  \end{itemize}
+  \item \textbf{Assigned resources} -- currently allocated resources tracked by \texttt{resources\_assigned.*} attributes, including same attributes as in available resources.
   
   \item \textbf{Active jobs} -- list of job identifiers (jobs) currently running on the node, with each job identified by its ID and task index (e.g., 14964063.pbs-m1.metacentrum.cz/0). 
-  
-  \item \textbf{Sharing and placement} -- sharing mode (\texttt{sharing}) that determines resource allocation (e.g., \texttt{default\_shared}, \texttt{force\_exclusive}), and reservation support (\texttt{resv\_enable}). 
-  
-  \item \textbf{Timestamps} -- last\_state\_change\_time (timestamp of the last state transition) and last\_used\_time (timestamp when the node was last utilized). \cite{pbs2022}
+
+  \item \textbf{Timestamps} -- last state change time and last used time. \cite{pbs2022}
 \end{itemize}
 
 The distinction between available and assigned resources enables monitoring of node utilization, while the state information provides insight into node availability for job scheduling. The jobs list allows tracking which specific jobs are consuming resources on each node, which is essential for resource accounting and troubleshooting. 
@@ -327,8 +314,6 @@ PBS provides the following data about reservations:
   \item \textbf{Reserved nodes} -- list of actual nodes allocated to the reservation (resv\_nodes) with their specific resource allocations.
   
   \item \textbf{Metadata} -- creation time (ctime), modification time (mtime), submission host (Submit\_Host), and partition information (partition, if applicable).
-  
-  \item \textbf{Retry information} -- reservation count (reserve\_count) and retry attempts (reserve\_retry) for tracking reservation lifecycle. \cite{pbs2022}
 \end{itemize}
 
 
@@ -342,50 +327,20 @@ PBS provides a comprehensive list of all available resources in the system, wher
 \begin{itemize}
   \item \textbf{Resource name} -- the identifier used to reference the resource in job submissions, node configurations, and queue settings (e.g., \texttt{cput}, \texttt{mem}, \texttt{ncpus}, \texttt{ngpus}, \texttt{walltime}).
   
-  \item \textbf{Type} -- the data type of the resource value, which determines how the resource is interpreted and validated. Common types include:
-  \begin{itemize}
-    \item \texttt{long} -- integer values (e.g., CPU count, GPU count)
-    \item \texttt{size} -- memory or storage values with units (e.g., bytes, KB, MB, GB)
-    \item \texttt{string} -- text values
-    \item \texttt{float} -- floating-point numeric values
-    \item \texttt{time} -- time duration values
-  \end{itemize}
+  \item \textbf{Type} -- the data type of the resource value, which determines how the resource is interpreted and validated. Eq. 
+  \texttt{long} -- integer values (e.g., CPU count, GPU count),
+  \texttt{size} -- memory or storage values,
+  \texttt{string} -- text values,
+  \texttt{float} -- floating-point numeric values,
+  \texttt{time} -- time duration values.
   
-  \item \textbf{Flag} -- a string of characters indicating where the resource can be used or referenced:
-  \begin{itemize}
-    \item \texttt{h} -- can be used at the host/node level
-    \item \texttt{q} -- can be used at the queue level
-    \item \texttt{n} -- can be used at the node level
-    \item \texttt{m} -- can be used at the server level 
-  \end{itemize}\cite{pbs2022} 
+  \item \textbf{Flag} -- a string of characters indicating where the resource can be used or referenced - \texttt{h} at the host/node level, \texttt{q} at the queue level, \texttt{n} at the node level, \texttt{m} at the server level.\cite{pbs2022} 
 \end{itemize}
 
 \subsubsection{Scheduler status}
 \label{subsubsec:scheduler-status}
 
 The PBS scheduler is responsible for making decisions about which jobs to run, when to run them, and on which nodes to execute them.  A PBS system can have multiple schedulers, each managing a specific partition or set of resources. The scheduler continuously evaluates queued jobs against available resources and applies scheduling policies to optimize resource utilization and meet job requirements. \cite{pbs2022}
-
-PBS provides status information about each scheduler instance, including: \cite{pbs2022}
-
-\begin{itemize}
-  \item \textbf{Identity and location} -- scheduler name, the host where the scheduler daemon runs (sched\_host), and the partition it manages (partition).
-  
-  \item \textbf{Operational state} -- current state of the scheduler (e.g., \texttt{scheduling}, \texttt{idle}) and whether scheduling is enabled (scheduling).
-  
-  \item \textbf{Scheduling cycle} -- scheduler cycle length (sched\_cycle\_length) defining how frequently the scheduler evaluates and schedules jobs, and the current iteration count (scheduler\_iteration).
-  
-  \item \textbf{Processor set configuration} -- settings for processor set (pset) handling: do\_not\_span\_psets (prevents jobs from spanning multiple processor sets) and only\_explicit\_psets (restricts scheduling to explicitly defined processor sets).
-  
-  \item \textbf{Scheduling mode} -- throughput\_mode indicates whether the scheduler prioritizes throughput optimization, and opt\_backfill\_fuzzy (if present) specifies the backfill optimization level.
-  
-  \item \textbf{Preemption settings} -- configuration for job preemption: preempt\_queue\_prio (priority threshold for preemption), preempt\_prio (queues or job types that can be preempted), preempt\_order (preemption order strategy), and preempt\_sort (sorting method for preemption selection, e.g., \texttt{min\_time\_since\_start}).
-  
-  \item \textbf{Integration and hooks} -- job\_run\_wait specifies the hook that controls when jobs can start execution (e.g., \texttt{runjob\_hook}).
-  
-  \item \textbf{File system paths} -- sched\_priv (path to scheduler private directory) and sched\_log (path to scheduler log files).
-  
-  \item \textbf{Logging and monitoring} -- log\_events (bitmask specifying which events to log) and server\_dyn\_res\_alarm (alarm threshold for dynamic resource changes). \cite{pbs2022}
-\end{itemize}
 
 \subsubsection{Fairshare metrics}
 \label{subsubsec:fairshare-metrics}
