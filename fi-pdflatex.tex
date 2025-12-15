@@ -454,7 +454,7 @@ user, last\_modified, fairshare.
 \subsubsection{Group file collection}
 \label{subsubsec:group-file-collection}
 
-In addition to entities and caches, the shell script located on PBS server automatically pushes its /etc/group file. These files provide information about local UNIX groups and their members. Whenever time it has changed, the PBS server writes the updated version to the PBSMon server's filesystem under the following path: \textbf{/etc/pbsMon/group/<pbsServer>}.
+In addition to entities and caches, the shell script located on PBS server automatically pushes its /etc/group file. These files provide information about local UNIX groups and their members. Whenever time it has changed, the PBS server writes the updated version to the PBSMon server's filesystem under the following path: \textbf{/etc/pbsmon/group/<pbsServer>}.
 
 
 \newpage
@@ -970,7 +970,6 @@ The API source code is organized into the following top-level directories:
       \item \texttt{accounting/} -- module for collecting accounting data from the accounting database.
       \item \texttt{app/} 
       \item \texttt{data-collection/} -- module responsible for collecting data from the infrastructure sources.
-      \item \texttt{groups/} -- module for retrieving user groups from the PBS server.
       \item \texttt{infrastructure/} -- module for the infrastructure overview.
       \item \texttt{jobs/} -- module for the jobs overview.
       \item \texttt{projects/} -- module for the OpenStack projects overview.
