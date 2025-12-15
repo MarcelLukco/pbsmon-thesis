@@ -1305,7 +1305,7 @@ The implemented solution focuses on reliable collection and presentation of PBS,
 
 The objectives of this thesis were fulfilled by designing and implementing a new web application intended to replace the existing PBSMon monitoring tool. The resulting solution provides a modern, maintainable system for presenting the state of the computing infrastructure. 
 
-However in contrast to the old solution, the new solution shows GPU usage of PBS jobs, which old solution did not support and introduces two user roles - administrator, which can see all unanonymised data and user, which can see only anonymised data. In addition to that, it shows a more detailed view of OpenStack entities.
+However in contrast to the old solution, the new solution shows GPU usage of PBS jobs and introduces two user roles - administrator, which can see all unanonymised data and user, which can see only anonymised data. In addition to that, it shows a more detailed view of OpenStack entities.
 
 The new solution is built as a modular web application with a clear separation between a backend API and a frontend, which improves extensibility and supports future development of additional features and data sources.
 
@@ -1315,7 +1315,7 @@ The final architecture integrates data from multiple sources, specifically PBS, 
 
 Finally, the app was deployed and is available for opponent and testing.
 
-Future work should primarily target extending the system beyond PBS and OpenStack by adding a dedicated Kubernetes module for the MetaCentrum Kubernetes service, including both a new collector and corresponding UI views. Additional improvements include providing administrative CSV exports for selected views (e.g., jobs and nodes), displaying user storage quotas to complement compute usage in personal and user detail pages, and extending the backend API with support for PBS job submission.
+Future work should primarily target extending the system beyond PBS and OpenStack by adding a dedicated Kubernetes module for the MetaCenter Kubernetes service, including both a new collector and corresponding UI views. Additional improvements include providing administrative CSV exports for selected views (e.g., jobs and nodes), displaying user storage quotas to complement compute usage in personal and user detail pages, and extending the backend API with support for PBS job submission.
 
 \appendix
 \chapter{OpenStack Response Example}
