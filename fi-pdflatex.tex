@@ -678,7 +678,7 @@ Furthermore, the design addresses the potential GDPR issue identified in Chapter
 
 The remainder of this chapter is structured as follows. Section~\ref{sec:functional-requirements} defines the functional requirements derived from the analysis and target use cases. Section~\ref{sec:gui-design} outlines the user interface design of the new application. Section~\ref{sec:architecture-design} describes the overall system architecture, including the division into backend and frontend parts. Finally, Section~\ref{sec:selected-technologies} justifies the selection of the technologies used to implement the proposed design.
 
-\section{Functional Requirements}
+\section{Functional and Non-Functional Requirements}
 \label{sec:functional-requirements}
 
 The goal of the new solution is to provide a read-only monitoring application that aggregates information from multiple data sources used in MetaCenter. The system does not modify the state of the underlying infrastructure; instead, it offers a unified user interface for viewing job information, infrastructure topology and cloud resources. Access to this information is controlled by a simple role model with two roles: \emph{user} and \emph{admin}. An administrator can perform all actions available to a regular user, plus additional operations related to support and diagnostics.
@@ -773,6 +773,20 @@ Administrators require a complete, non-anonymised view of the system in order to
 \end{description}
 
 These functional requirements form the basis for the graphical user interface design described in Section~\ref{sec:gui-design} and for the architecture of the new solution discussed in Section~\ref{sec:architecture-design}.
+
+
+\subsection{Non-Functional Requirements}
+The primary goal of the application is to provide a view about current state of the MetaCentrum infrastructure.
+
+Instead, data must be collected periodically by dedicated collectors and stored in a cache. The resulting data should be proccessed and served to the end users from this cache, which keeps user-facing requests fast and predictable while decoupling them from slow or heavy collection tasks.
+
+\begin{itemize}
+  \item \textbf{Freshness.} The cached dataset should be refreshed regularly so that the UI reflects the current state with acceptable delay.
+  \item \textbf{Performance.} User requests must be handled quickly by reading from the cache, without triggering expensive collection work.
+  \item \textbf{Load protection.} Collection and external-system access must be rate-limited and scheduled to prevent overload and denial-of-service scenarios.
+  \item \textbf{Reliability.} Temporary failures of external systems should not break the UI; the last successfully collected dataset should remain available.
+  \item \textbf{Scalability.} The architecture should handle increasing data volume and user traffic.
+\end{itemize}
 
 \newpage
 \section{Graphical User Interface Design}
@@ -980,7 +994,7 @@ The \texttt{pbs-collector} microservice is therefore responsible for periodic re
 
 \subsection{Perun data collection}
 \label{sec:perun-data-collection}
-Perun is not collected by PBSMon in the same way as PBS or OpenStack, because the required data are provided to PBSMon via a push mechanism external to the application. For this reason, PBSMon does not implement an active Perun client; instead, it only consumes prepared Perun exports.
+Perun is not collected by PBSMon in the same way as PBS or OpenStack, because the required data are provided to PBSMon via a push mechanism external to the application. For this reason, PBSMon does not implement an active Perun client; instead, it only consumes prepared Perun exports. Since the push mechanism does not require specific requirement, it was not neccessary to create a dedicated microservice for Perun collection
 
 Within the API repository, Perun-related inputs are stored under \texttt{/api/data/perun/}. This directory contains static JSON files:
 
@@ -994,14 +1008,15 @@ These files were described in more detail in section~\ref{subsec:entities-in-per
 
 \subsection{OpenStack data collection}
 \label{subsec:openstack-data-collection}
-In addition to PBS- and Perun-derived datasets, the system collects selected operational and inventory information related to the OpenStack environment. These data are obtained from a Prometheus server, which provides metrics and metadata exported by infrastructure components and custom exporters \cite{PrometheusOverview}. Unlike PBS and Perun data (which are loaded from files), the Prometheus-derived data are treated as a \emph{live} source and are therefore not persisted to the filesystem. Instead, the latest successful snapshot is stored only in the application memory and served through the API on demand.
+In addition to PBS- and Perun-derived datasets, the system collects selected operational and inventory information related to the OpenStack environment. These data are obtained from a Prometheus server, which provides metrics and metadata exported by infrastructure components and custom exporters \cite{PrometheusOverview}. 
+
+Unlike PBS and Perun data (which are loaded from files and uses filesystem as form of communication), the Prometheus-derived data are obtained from prometheus, and since the prometheus provides API endpoint for querying data, it does not need any complex setup. Therefore it was decided that prometheus metrics will not be persisted to the filesystem. Since the selected technology NestJS supports native setup of CRON jobs, the cron jobs, that occurs on API start and then every ten minutes will obtain data from prometheus and store in memory.  Therefore ensuring that the latest successfull snapshot will be stored in memory.
 
 The collection logic is implemented in the \texttt{Prometheus\-Collection\-Service}. The service defines a fixed set of prometheus queries that cover both hardware-related metrics (CPU, memory, GPU, disks, networking) and OpenStack-specific inventory data (projects, VM's, and users). The collecting proccess iterates over the configured queries and executes them sequentially. Each query result is stored under a human-readable key (the query \texttt{name}) together with a timestamp representing the time of the snapshot creation. If a query fails, the error is logged and collection continues, so that partial data can still be exposed to the frontend.
 
-
 \subsection{Documentation}
 \label{sec:api-documentation}
-The API contract is described using an OpenAPI specification, which defines the available endpoints, their parameters, and response schemas. In addition to the static specification, the implementation exposes a Swagger UI that renders the OpenAPI document and provides an interactive interface for exploring and testing the API. This allows developers and administrators to call individual endpoints directly from the browser, inspect responses, and verify the expected behaviour without requiring external tools. The OpenAPI specification is included within the thesis archive.
+The API contract is described using an OpenAPI specification, which defines endpoints along with their parameters and response schemas. In addition to the static specification, the implementation exposes a Swagger UI that renders the OpenAPI document. It provides an interactive interface for exploring and testing the API. This allows developers and administrators to call individual endpoints directly from the browser and inspect responses. They can also verify the expected behaviour without requiring external tools. The OpenAPI specification is included in the thesis archive.
 
 
 \newpage
@@ -1027,7 +1042,7 @@ The following subsections describe the individual page views listed in the navig
 
 \newpage
 \subsection{Personal View}
-\label{subsec:personal-view}
+\label{subsec:new-personal-view}
 
 The \emph{Personal View} page provides a personalized overview of monitoring data related to the currently authenticated user (Figure~\ref{fig:ui-personal-view}). Its purpose is to present a compact summary of the user’s current activity across both the PBS environment and cloud projects. This page implements \textbf{FR-01 Personal overview} by combining high-level totals with a direct listing of jobs and cloud projects.
 
@@ -1241,7 +1256,7 @@ The \emph{User detail} page aggregates identity and usage information for a sele
 \paragraph{Consumed API endpoints.}
 \begin{itemize}
   \item \texttt{GET /users/:id} -- user identity and profile metadata.
-  \item \texttt{GET /accounting/users/:username} -- aggregated historical jobs statistics and yearly breakdowns.
+  \item \texttt{GET /accounting/users/:username} -- aggregated historical jobs statistics.
   \item \texttt{GET /pbs/jobs} -- jobs filtered for the selected user.
   \item \texttt{GET /pbs/queues} -- queues available for the selected user.
 \end{itemize}
@@ -1288,7 +1303,9 @@ The implemented solution focuses on reliable collection and presentation of PBS,
 \markboth{Conclusion}{Conclusion}
 \addcontentsline{toc}{chapter}{Conclusion}
 
-The objectives of this thesis were fulfilled by designing and implementing a new web application intended to replace the existing PBSMon monitoring tool. The resulting solution provides a modern, maintainable system for presenting the state of the computing infrastructure. However in contrast to the old solution, the new solution also shows a more detailed view of OpenStack entities. In addition to that, it shows GPU usage of PBS jobs, which old solution did not support and introduces two user roles - administrator, which can see all unanonymised data and user, which can see only anonymised data.
+The objectives of this thesis were fulfilled by designing and implementing a new web application intended to replace the existing PBSMon monitoring tool. The resulting solution provides a modern, maintainable system for presenting the state of the computing infrastructure. 
+
+However in contrast to the old solution, the new solution shows GPU usage of PBS jobs, which old solution did not support and introduces two user roles - administrator, which can see all unanonymised data and user, which can see only anonymised data. In addition to that, it shows a more detailed view of OpenStack entities.
 
 The new solution is built as a modular web application with a clear separation between a backend API and a frontend, which improves extensibility and supports future development of additional features and data sources.
 
@@ -1296,7 +1313,7 @@ The development was preceded by an analysis phase focused on understanding the o
 
 The final architecture integrates data from multiple sources, specifically PBS, Perun, and OpenStack, and exposes the processed information through a JSON-based API. To support maintainability and easier evolution of the system, the implementation uses a monorepository structure and a technology stack aligned with the ZEUS project \cite{Valalsky2025thesis}, which was an important decision due to potential future integration or merging of both solutions into a single project. The API provides role-based access control for user and administrator operations, and the API is documented through an OpenAPI specification.
 
-Finally, the app was deployed using docker compose and is available at \url{https://mu-pub-245-82.flt.openstack.cloud.e-infra.cz}.
+Finally, the app was deployed and is available for opponent and testing.
 
 Future work should primarily target extending the system beyond PBS and OpenStack by adding a dedicated Kubernetes module for the MetaCentrum Kubernetes service, including both a new collector and corresponding UI views. Additional improvements include providing administrative CSV exports for selected views (e.g., jobs and nodes), displaying user storage quotas to complement compute usage in personal and user detail pages, and extending the backend API with support for PBS job submission.
 
