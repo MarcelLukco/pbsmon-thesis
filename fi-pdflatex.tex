@@ -1311,7 +1311,7 @@ The development was preceded by an analysis phase focused on understanding the o
 
 The final architecture integrates data from multiple sources, specifically PBS, Perun, and OpenStack, and exposes the processed information through a JSON-based API. To support maintainability and easier evolution of the system, the implementation uses a monorepository structure and a technology stack aligned with the ZEUS project \cite{Valalsky2025thesis}, which was an important decision due to potential future integration or merging of both solutions into a single project. The API provides role-based access control for user and administrator operations, and the API is documented through an OpenAPI specification.
 
-Finally, the app was deployed and is available for opponent and testing.
+Finally, the app was deployed and is available for opponent and testing. The source code is available within open source git repository, \url{https://github.com/MarcelLukco/pbsmon-2.0}.
 
 Future work should primarily target extending the system beyond PBS and OpenStack by adding a dedicated Kubernetes module for the MetaCenter Kubernetes service, including both a new collector and corresponding UI views. Additional improvements include providing administrative CSV exports for selected views (e.g., jobs and nodes), displaying user storage quotas to complement compute usage in personal and user detail pages, and extending the backend API with support for PBS job submission.
 
