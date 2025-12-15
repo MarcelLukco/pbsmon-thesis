@@ -61,7 +61,7 @@
     keywords    = {cloud, cloud computing, distributed computing, MetaCentrum, NestJS, React},
     TeXkeywords = {cloud, cloud computing, distributed computing, MetaCentrum, NestJS, React},
     abstract    = {%  
-    This thesis describes the development of a new web application intended to replace the existing PBSMon monitoring tool used in the MetaCenter environment. The work begins with an analysis of the original solution, its limitations, and relevant application and technologies relevant to MetaCenter infrastructure. Based on the identified requirements, the thesis proposes a new architecture and justifies key design decisions, including the separation into a multiple cooperating components. All of this followed by the describing of the implementation results of the new solution. Concluding in outlining possible future improvements and extensions.
+    This thesis describes the development of a new web application intended to replace the existing PBSMon monitoring tool used in the MetaCenter environment. The work begins with an analysis of the original solution, its limitations, and relevant application and technologies for MetaCenter infrastructure. Based on the identified requirements, the thesis proposes a new architecture and justifies key design decisions, including the separation into multiple cooperating components. All of this is followed by the describing of the implementation results of the new solution. The thesis concludes by outlining possible future improvements and extensions.
     },
     declaration = {%
     Hereby I declare that this paper is my original authorial work, which
@@ -82,9 +82,9 @@ I declare that I used these tools in accordance with the principles of academic 
     thanks      = {%
     First and foremost, I would like to express my sincere gratitude to my supervisor, Mgr. Miroslav Ruda, for his valuable guidance, insightful comments, and continuous support throughout the development of this thesis.
 
-    I would also like to thank Mgr. Václav Chlumský, for his technical assistance and expertise, which significantly contributed to the practical part of this work.
+    I would also like to thank Mgr. Václav Chlumský for his technical assistance and expertise, which significantly contributed to the practical part of this work.
     
-    My thanks also go to Ing. František Řezníček, and Mgr. Ivana Křenková for their collaboration, helpful advice, and support during the integration with related systems.
+    My thanks also go to Ing. František Řezníček and Mgr. Ivana Křenková for their collaboration, helpful advice, and support during the integration with related systems.
     },
     bib         = example.bib,
     %% Remove the following line to use the JVS 2018 faculty logo.
@@ -156,7 +156,7 @@ The existing solution is built as a monolithic Java application that collects da
 \newpage
 \subsection{Data collection environments}
 \label{subsec:data-collection-environments}
-PBSMon collects following data from the following environments:
+PBSMon collects data from the following environments:
 \begin{itemize}
   \item PBS environment
   \begin{itemize}
@@ -168,7 +168,7 @@ PBSMon collects following data from the following environments:
   \item OpenStack environment - Information about virtual machines running on physical hosts
 \end{itemize}
 
-Each of these environments has its own method of communication and data representation. Within the system architecture, these differences are abstracted through interfaces and adapters that ensure unified data processing. All of these enviroments and their data structure are described in the following sections.
+Each of these environments has its own method of communication and data representation. Within the system architecture, these differences are abstracted through interfaces and adapters that ensure unified data processing. Environments and their data structure are described in the following sections.
 
 \subsection{Data Processing and Unification}
 \label{subsec:data-processing-and-unification}
@@ -183,7 +183,7 @@ The data obtained from various sources — such as compute clusters (PBS), cloud
 \subsection{Web Presentation}
 \label{subsec:web-presentation}
 
-The presentation of data is performed through server-side rendering of HTML pages. Only logged in users, that have approved access to PBSMon can access the web interface. The authorization is performed by third party system using OICD token, that will be described in detail in section \ref{sec:authentication}.
+The presentation of data is performed through server-side rendering of HTML pages. Only logged-in users, who have approved access to PBSMon can access the web interface. The authorization is performed by third party system using OIDC token, that will be described in detail in section \ref{sec:authentication}.
 
 These pages display detailed views of jobs, nodes, system states, and other information relevant to both users and administrators. As mentioned earlier, the web interface is strictly read-only and does not provide any functionality for data input or modification.
 The frontend is not implemented as a standalone application; it is an integral part of the monolithic Java system.
@@ -471,8 +471,8 @@ The user dataset contains information about all registered users in the MetaCent
 
 \subsubsection{Machines}
 \label{subsubsec:machines-perun}
-In addition to management of users, Perun also collect information about physical computing resources of the MetaCenter infrastructure.
-These data are then passed to PBSMon from Perun. Data are hierachically structured and grouped by Organization -> Cluster -> Computing Node.
+In addition to management of users, Perun collects information about physical computing resources of the MetaCenter infrastructure.
+These data are then passed to PBSMon from Perun. Data are hierarchically structured and grouped by Organization -> Cluster -> Computing Node.
 
 Each record is an institution that has at least one cluster. Cluster is a group of computing nodes that are owned by the same institution. Computing node is a physical machine that is part of the cluster.
 
@@ -486,14 +486,14 @@ Each computing node is described by the following metadata:
   \item The list of individual node hostnames
 \end{itemize}
 
-These data are neccessary to get additional information about the complete information about the computing node for the running PBS jobs.
-Additionally, these data independetly from PBS are important for knowing the complete information about the computing nodes for whole MetaCenter infrastructure.
+These data are necessary to get additional information about the complete information about the computing node for the running PBS jobs.
+Additionally, these data independently from PBS are important for knowing the complete information about the computing nodes for whole MetaCenter infrastructure.
 
 
 \subsection{Data Collection Mechanism}
 \label{subsec:data-collection-mechanism-perun}
 
-The integration of the PBSMon system with Perun is designed using a PUSH model. Instead of direct access to the Perun database or invoking its API, Perun periodically generates JSON files containing all relevant information about users and computing resources. These files are then transferred via SSH directly to the PBSMon server, where they are stored in the filesystem, and subsequently loaded and processed by PBSMon. These files are stored in the filesystem as following:
+The integration of the PBSMon system with Perun is designed using a PUSH model. Instead of direct access to the Perun database or invoking its API, Perun periodically generates JSON files containing all relevant information about users and computing resources. These files are then transferred via SSH directly to the PBSMon server, where they are stored in the filesystem, and subsequently loaded and processed by PBSMon. These files are stored in the filesystem as follows:
 
 \begin{itemize}
   \item \textbf{/etc/pbsmon/pbsmon\_users.json} 
@@ -750,7 +750,7 @@ A regular user must be able to use the application as a personal monitoring dash
   The system shall display fairshare information relevant to the current user, derived from the PBS fairshare entries, and optionally allow comparison with other users in the same groups.
 
   \item[FR-10 QSUB assembler]  
-  The system shall provide a ``QSUB assembler'' -- an interactive interface that helps the user construct a valid \texttt{qsub} command by selecting queues, resources and other parameters. The result shall be presented in a form that can be copied and used in a terminal. Alltogether with the list of nodes that fullfils the requirements.
+  The system shall provide a ``QSUB assembler'' -- an interactive interface that helps the user construct a valid \texttt{qsub} command by selecting queues, resources and other parameters. The result shall be presented in a form that can be copied and used in a terminal. Together with the list of nodes that fullfil the requirements.
 
   \item[FR-11 Detail pages]  
   For all major entities (job, node, queue, project, VM, reservation, user), the system shall offer detail pages accessible from overview tables, with information limited according to the user's role and the anonymisation rules described above.
@@ -776,9 +776,9 @@ These functional requirements form the basis for the graphical user interface de
 
 
 \subsection{Non-Functional Requirements}
-The primary goal of the application is to provide a view about current state of the MetaCentrum infrastructure.
+The primary goal of the application is to provide a view of current state of the MetaCentrum infrastructure.
 
-Instead, data must be collected periodically by dedicated collectors and stored in a cache. The resulting data should be proccessed and served to the end users from this cache, which keeps user-facing requests fast and predictable while decoupling them from slow or heavy collection tasks.
+Instead, data must be collected periodically by dedicated collectors and stored in a cache. The resulting data should be processed and served to the end users from this cache, which keeps user-facing requests fast and predictable while decoupling them from slow or heavy collection tasks.
 
 \begin{itemize}
   \item \textbf{Freshness.} The cached dataset should be refreshed regularly so that the UI reflects the current state with acceptable delay.
@@ -930,10 +930,10 @@ The resulting system is implemented as a separated backend and frontend that com
 
 \section{Authorization and Authentication}
 \label{sec:authorization-and-authentication}
-As mentioned in the section~\ref{sec:authentication}, the old PBSMon solution uses third-party authentication provided by Perun's e-INFRA system. The new solution uses same third-party authentication using the same OIDC authentication protocol.
+As mentioned in the section~\ref{sec:authentication}, the old PBSMon solution uses third-party authentication provided by Perun's e-INFRA system. The new solution uses the same third-party authentication using the OIDC authentication protocol.
 
 However, the new solution introduces two role system - administator and user. It was decided
-that those users, which belong either to group metasw or pbs-admins will be considered administrators and have full access to all data.
+that those users, who belong either to group metasw or pbs-admins will be considered administrators and have full access to all data.
 
 
 \section{Repository directory structure}
@@ -964,8 +964,8 @@ The API source code is organized into the following top-level directories:
   \item \texttt{src/} -- source code of the API.
   \begin{itemize}
     \item \texttt{common/} -- shared utilities and cross-cutting concerns.
-    \item \texttt{config/} -- application and environment configuration. Eq. QSUB assembler configuration, pbs server list, etc.
-    \item \texttt{modules/} -- feature-oriented modules. Each module represent a domain entity and its related data. Each module consists of controllers and services. And therefore each module have its own routes and endpoints. There are list of modules:
+    \item \texttt{config/} -- application and environment configuration. e.g. QSUB assembler configuration, pbs server list, etc.
+    \item \texttt{modules/} -- feature-oriented modules. Each module have a domain entity and its related data. Each module consists of controllers and services. And therefore each module have its own routes and endpoints. There are list of modules:
     \begin{itemize}
       \item \texttt{accounting/} -- module for collecting accounting data from the accounting database.
       \item \texttt{app/} 
